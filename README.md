@@ -39,7 +39,7 @@ Logs are stored under `logs/` with timestamped files for the main run and the su
    ```bash
    ./bootstrap.sh
    ```
-4. Walk through the menus to pick the categories and tools you want (including dotfile deployment and editor choice).
+4. Follow the numeric prompts to pick the categories and tools you want (type selections like `1 3 5` or ranges such as `1-3`; press Enter to accept the defaults shown).
 5. Inspect `logs/bootstrap_<timestamp>.log` and `logs/summary_<timestamp>.txt` after completion for details.
 
 Re-running the scripts is safe: all package installs use `--needed`, and pipx installs are idempotent.

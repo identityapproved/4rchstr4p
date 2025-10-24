@@ -3,23 +3,23 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 install_crypto_forensics() {
-    mapfile -t selections < <(multi_select \
-        --title "Crypto & Forensics" \
-        --prompt "Choose crypto/forensics tools:" \
-        --default "hashcat cyberchef binwalk volatility stegsolve" \
-        --options \
-            "hashcat:Hashcat + OpenCL" \
-            "john:John the Ripper jumbo" \
-            "cyberchef:CyberChef (AUR)" \
-            "binwalk:binwalk + dependencies" \
-            "volatility:Volatility3" \
-            "stegsolve:Stegsolve (AUR)" \
-            "sleuthkit:Sleuth Kit & Autopsy" \
-            "ghidra:Install Ghidra if missing" )
+    mapfile -t selections < <(prompt_choices \
+        "Choose crypto/forensics tools:" \
+        "hashcat cyberchef binwalk volatility stegsolve" \
+        "hashcat:Hashcat + OpenCL" \
+        "john:John the Ripper jumbo" \
+        "cyberchef:CyberChef (AUR)" \
+        "binwalk:binwalk + dependencies" \
+        "volatility:Volatility3" \
+        "stegsolve:Stegsolve (AUR)" \
+        "sleuthkit:Sleuth Kit & Autopsy" \
+        "ghidra:Install Ghidra if missing")
 
     local helper
     helper="$(require_aur_helper || true)"

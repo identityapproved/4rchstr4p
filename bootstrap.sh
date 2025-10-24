@@ -14,20 +14,17 @@ main() {
     init_environment "${SCRIPT_DIR}"
     ensure_pacman
     ensure_sudo
-    ensure_menu_backend
 
     log_section "Arch Linux CTF bootstrap started"
 
-    mapfile -t top_choices < <(multi_select \
-        --title "CTF Bootstrap" \
-        --prompt "Select the categories you want to configure:" \
-        --default "arch languages shell ctf" \
-        --options \
-            "arch:Arch Linux essentials (helpers, system tuning, virtualization)" \
-            "languages:Programming languages and runtimes" \
-            "shell:Shell & terminal tooling" \
-            "ctf:CTF tooling suite (choose sub-categories inside)" \
-            "extras:Optional extras & polish")
+    mapfile -t top_choices < <(prompt_choices \
+        "Select the categories you want to configure:" \
+        "arch languages shell ctf" \
+        "arch:Arch Linux essentials (helpers, system tuning, virtualization)" \
+        "languages:Programming languages and runtimes" \
+        "shell:Shell & terminal tooling" \
+        "ctf:CTF tooling suite (choose sub-categories inside)" \
+        "extras:Optional extras & polish")
 
     if [[ "${#top_choices[@]}" -eq 0 ]]; then
         log_warn "No categories selected; exiting without changes."

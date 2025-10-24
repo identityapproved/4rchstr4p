@@ -3,22 +3,22 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 install_web_tools() {
-    mapfile -t selections < <(multi_select \
-        --title "Web CTF" \
-        --prompt "Choose web exploitation tools:" \
-        --default "burp zap dirsearch gobuster wfuzz sqlmap" \
-        --options \
-            "burp:Burp Suite Community (AUR)" \
-            "zap:OWASP ZAP" \
-            "dirsearch:dirsearch" \
-            "gobuster:gobuster" \
-            "wfuzz:wfuzz" \
-            "sqlmap:sqlmap" \
-            "ffuf:ffuf (AUR)" )
+    mapfile -t selections < <(prompt_choices \
+        "Choose web exploitation tools:" \
+        "burp zap dirsearch gobuster wfuzz sqlmap" \
+        "burp:Burp Suite Community (AUR)" \
+        "zap:OWASP ZAP" \
+        "dirsearch:dirsearch" \
+        "gobuster:gobuster" \
+        "wfuzz:wfuzz" \
+        "sqlmap:sqlmap" \
+        "ffuf:ffuf (AUR)")
 
     local helper
     helper="$(require_aur_helper || true)"

@@ -3,20 +3,20 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 install_reversing() {
-    mapfile -t selections < <(multi_select \
-        --title "Reversing" \
-        --prompt "Choose reversing tools:" \
-        --default "ghidra radare cutter" \
-        --options \
-            "ghidra:Ghidra (AUR download)" \
-            "radare:radare2 suite" \
-            "cutter:Cutter GUI" \
-            "binaryninja:Binary Ninja (manual install)" \
-            "frida:Frida tools" )
+    mapfile -t selections < <(prompt_choices \
+        "Choose reversing tools:" \
+        "ghidra radare cutter" \
+        "ghidra:Ghidra (AUR download)" \
+        "radare:radare2 suite" \
+        "cutter:Cutter GUI" \
+        "binaryninja:Binary Ninja (manual install)" \
+        "frida:Frida tools")
 
     local helper
     helper="$(require_aur_helper || true)"

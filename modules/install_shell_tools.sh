@@ -4,8 +4,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 install_shell() {
     local shell="$1"
@@ -29,15 +31,13 @@ install_misc_cli() {
 }
 
 install_fonts() {
-    mapfile -t fonts < <(multi_select \
-        --title "Fonts" \
-        --prompt "Select nerd fonts to install:" \
-        --default "iosevka firacode" \
-        --options \
-            "iosevka:ttf-iosevka-nerd (AUR)" \
-            "firacode:nerd-fonts-fira-code" \
-            "jetbrains:nerd-fonts-jetbrains-mono" \
-            "powerline:powerline-fonts" )
+    mapfile -t fonts < <(prompt_choices \
+        "Select nerd fonts to install:" \
+        "iosevka firacode" \
+        "iosevka:ttf-iosevka-nerd (AUR)" \
+        "firacode:nerd-fonts-fira-code" \
+        "jetbrains:nerd-fonts-jetbrains-mono" \
+        "powerline:powerline-fonts")
     local helper
     helper="$(require_aur_helper || true)"
     for font in "${fonts[@]}"; do
@@ -67,15 +67,11 @@ install_fonts() {
 }
 
 choose_editor() {
-    mapfile -t editor_choice < <(multi_select \
-        --title "Editor Selection" \
-        --prompt "Select the editor stack to install (choose one):" \
-        --default "neovim" \
-        --options \
-            "neovim:Neovim + LazyVim starter" \
-            "vim:Vim (classic)" )
-
-    echo "${editor_choice[0]:-}"
+    prompt_single_choice \
+        "Select the editor stack to install:" \
+        "neovim" \
+        "neovim:Neovim + LazyVim starter" \
+        "vim:Vim (classic)"
 }
 
 install_vim() {
@@ -118,20 +114,18 @@ setup_lazyvim() {
 }
 
 run_shell_tools() {
-    mapfile -t selections < <(multi_select \
-        --title "Shell & Terminal" \
-        --prompt "Choose shell tooling to install/configure:" \
-        --default "zsh editor fzf tmux misc fonts dotfiles zsh_plugins" \
-        --options \
-            "zsh:Install Zsh" \
-            "fish:Install Fish shell" \
-            "editor:Configure editor (Vim/Neovim)" \
-            "fzf:fzf fuzzy finder" \
-            "tmux:tmux terminal multiplexer" \
-            "misc:Misc CLI tools (bat, exa, tree, ripgrep, jq...)" \
-            "fonts:Nerd fonts selection" \
-            "dotfiles:Deploy repository dotfiles" \
-            "zsh_plugins:Install Oh My Zsh custom plugins" )
+    mapfile -t selections < <(prompt_choices \
+        "Choose shell tooling to install/configure:" \
+        "zsh editor fzf tmux misc fonts dotfiles zsh_plugins" \
+        "zsh:Install Zsh" \
+        "fish:Install Fish shell" \
+        "editor:Configure editor (Vim/Neovim)" \
+        "fzf:fzf fuzzy finder" \
+        "tmux:tmux terminal multiplexer" \
+        "misc:Misc CLI tools (bat, exa, tree, ripgrep, jq...)" \
+        "fonts:Nerd fonts selection" \
+        "dotfiles:Deploy repository dotfiles" \
+        "zsh_plugins:Install Oh My Zsh custom plugins")
 
     for item in "${selections[@]}"; do
         case "${item}" in

@@ -4,8 +4,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 ensure_git() {
     if ! command -v git >/dev/null 2>&1; then

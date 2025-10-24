@@ -3,8 +3,10 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 ensure_pipx() {
     if ! command -v pipx >/dev/null 2>&1; then
@@ -15,17 +17,15 @@ ensure_pipx() {
 ensure_pipx
 
 install_pwn_tools() {
-    mapfile -t selections < <(multi_select \
-        --title "Pwn" \
-        --prompt "Choose pwn tooling:" \
-        --default "pwntools gef ropgadget qemu" \
-        --options \
-            "pwntools:pwntools (pipx)" \
-            "gef:GEF for GDB" \
-            "pwndbg:pwndbg (AUR)" \
-            "ropgadget:ROPgadget (pipx)" \
-            "one_gadget:one_gadget (AUR)" \
-            "qemu:QEMU full suite" )
+    mapfile -t selections < <(prompt_choices \
+        "Choose pwn tooling:" \
+        "pwntools gef ropgadget qemu" \
+        "pwntools:pwntools (pipx)" \
+        "gef:GEF for GDB" \
+        "pwndbg:pwndbg (AUR)" \
+        "ropgadget:ROPgadget (pipx)" \
+        "one_gadget:one_gadget (AUR)" \
+        "qemu:QEMU full suite")
 
     local helper
     helper="$(require_aur_helper || true)"

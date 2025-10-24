@@ -3,20 +3,20 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 install_osint_tools() {
-    mapfile -t selections < <(multi_select \
-        --title "OSINT" \
-        --prompt "Choose OSINT tools:" \
-        --default "spiderfoot sherlock holehe" \
-        --options \
-            "maltego:Maltego (AUR)" \
-            "spiderfoot:SpiderFoot" \
-            "sherlock:sherlock username hunter" \
-            "holehe:holehe (email reuse)" \
-            "maigret:Maigret (AUR)" )
+    mapfile -t selections < <(prompt_choices \
+        "Choose OSINT tools:" \
+        "spiderfoot sherlock holehe" \
+        "maltego:Maltego (AUR)" \
+        "spiderfoot:SpiderFoot" \
+        "sherlock:sherlock username hunter" \
+        "holehe:holehe (email reuse)" \
+        "maigret:Maigret (AUR)")
 
     local helper
     helper="$(require_aur_helper || true)"

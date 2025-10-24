@@ -3,8 +3,10 @@
 
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 install_posh() {
     install_packages pacman oh-my-posh
@@ -27,14 +29,13 @@ install_misc() {
 }
 
 run_optional_extras() {
-    mapfile -t selections < <(multi_select \
-        --title "Optional Extras" \
-        --prompt "Choose optional extras to install:" \
-        --options \
-            "posh:oh-my-posh prompt" \
-            "starship:Starship prompt" \
-            "terminal:Alacritty terminal emulator" \
-            "misc:Misc extras (neofetch, yq)" )
+    mapfile -t selections < <(prompt_choices \
+        "Choose optional extras to install:" \
+        "" \
+        "posh:oh-my-posh prompt" \
+        "starship:Starship prompt" \
+        "terminal:Alacritty terminal emulator" \
+        "misc:Misc extras (neofetch, yq)")
 
     for item in "${selections[@]}"; do
         case "${item}" in

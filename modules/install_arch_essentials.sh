@@ -4,17 +4,17 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 prompt_helper_choice() {
-    mapfile -t helper_choice < <(multi_select \
-        --title "AUR Helper" \
-        --prompt "Select an AUR helper to install (if none, skip):" \
-        --options \
-            "yay:Install yay (Go-based helper)" \
-            "paru:Install paru (Rust-based helper)")
-    echo "${helper_choice[0]:-}"
+    prompt_single_choice \
+        "Select an AUR helper to install (press Enter to skip):" \
+        "" \
+        "yay:Install yay (Go-based helper)" \
+        "paru:Install paru (Rust-based helper)"
 }
 
 install_aur_helper() {
@@ -51,18 +51,16 @@ install_aur_helper() {
 }
 
 install_arch_packages() {
-    mapfile -t essentials < <(multi_select \
-        --title "Arch Essentials" \
-        --prompt "Select base packages to install:" \
-        --default "update base-devel network utils virtualbox" \
-        --options \
-            "update:System update & keyring refresh" \
-            "base-devel:base-devel toolchain" \
-            "network:Networking utilities (net-tools, inetutils, traceroute)" \
-            "virtualbox:Virtualization support (VirtualBox detection)" \
-            "utils:System utilities (htop, lsof, p7zip, unzip, zip)" \
-            "containers:Podman stack" \
-            "fonts:Base fonts (ttf-dejavu, liberation)" )
+    mapfile -t essentials < <(prompt_choices \
+        "Select base packages to install:" \
+        "update base-devel network utils virtualbox" \
+        "update:System update & keyring refresh" \
+        "base-devel:base-devel toolchain" \
+        "network:Networking utilities (net-tools, inetutils, traceroute)" \
+        "virtualbox:Virtualization support (VirtualBox detection)" \
+        "utils:System utilities (htop, lsof, p7zip, unzip, zip)" \
+        "containers:Podman stack" \
+        "fonts:Base fonts (ttf-dejavu, liberation)" )
 
     local helper_manager
     helper_manager="$(aur_helper)"

@@ -5,8 +5,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODULE_ROOT="${SCRIPT_DIR}"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 CTF_MODULES=(
     "install_ctf_reversing.sh:Reversing tools (Ghidra, Cutter, radare2...)"
@@ -17,11 +19,10 @@ CTF_MODULES=(
 )
 
 run_ctf_suite() {
-    mapfile -t picks < <(multi_select \
-        --title "CTF Tooling" \
-        --prompt "Select CTF tool categories to install:" \
-        --default "install_ctf_reversing.sh install_ctf_web.sh install_ctf_pwn.sh" \
-        --options "${CTF_MODULES[@]}")
+    mapfile -t picks < <(prompt_choices \
+        "Select CTF tool categories to install:" \
+        "install_ctf_reversing.sh install_ctf_web.sh install_ctf_pwn.sh" \
+        "${CTF_MODULES[@]}")
 
     for module in "${picks[@]}"; do
         run_module "${MODULE_ROOT}/${module}"

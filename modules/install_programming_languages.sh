@@ -4,8 +4,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
+ensure_environment "${ROOT_DIR}"
 
 ensure_pipx() {
     if ! command -v pipx >/dev/null 2>&1; then
@@ -59,18 +61,16 @@ install_java() {
 }
 
 install_languages() {
-    mapfile -t langs < <(multi_select \
-        --title "Languages" \
-        --prompt "Select languages/runtimes to install:" \
-        --default "python go rust node" \
-        --options \
-            "python:Python + pipx" \
-            "go:Go toolchain" \
-            "rust:Rust via rustup" \
-            "node:Node.js via fnm" \
-            "ruby:Ruby & bundler" \
-            "perl:Perl" \
-            "java:OpenJDK" )
+    mapfile -t langs < <(prompt_choices \
+        "Select languages/runtimes to install:" \
+        "python go rust node" \
+        "python:Python + pipx" \
+        "go:Go toolchain" \
+        "rust:Rust via rustup" \
+        "node:Node.js via fnm" \
+        "ruby:Ruby & bundler" \
+        "perl:Perl" \
+        "java:OpenJDK")
 
     for lang in "${langs[@]}"; do
         case "${lang}" in
