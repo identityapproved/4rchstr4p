@@ -6,6 +6,8 @@ set -euo pipefail
 LOG_COLORS=${LOG_COLORS:-1}
 PROMPT_CHOICES_LAST_INPUT=""
 PROMPT_CHOICES_EXIT_REQUESTED=0
+PACKAGE_MANAGER=""
+CTF_BOOTSTRAP_STATE_DIR=""
 
 init_environment() {
     local root="${1:-$(pwd)}"
@@ -15,6 +17,7 @@ init_environment() {
     export CTF_BOOTSTRAP_LOG_FILE="${CTF_BOOTSTRAP_LOG_DIR}/bootstrap_$(date +%Y%m%d_%H%M%S).log"
     export CTF_BOOTSTRAP_SUMMARY="${CTF_BOOTSTRAP_LOG_DIR}/summary_$(date +%Y%m%d_%H%M%S).txt"
     touch "${CTF_BOOTSTRAP_LOG_FILE}" "${CTF_BOOTSTRAP_SUMMARY}"
+    CTF_BOOTSTRAP_STATE_DIR="${root}/.state"
 }
 
 ensure_environment() {
@@ -22,6 +25,13 @@ ensure_environment() {
     if [[ -z "${CTF_BOOTSTRAP_LOG_FILE:-}" || -z "${CTF_BOOTSTRAP_SUMMARY:-}" ]]; then
         init_environment "${root}"
     fi
+}
+
+ensure_state_dir() {
+    if [[ -z "${CTF_BOOTSTRAP_STATE_DIR}" ]]; then
+        CTF_BOOTSTRAP_STATE_DIR="${CTF_BOOTSTRAP_ROOT:-$(pwd)}/.state"
+    fi
+    mkdir -p "${CTF_BOOTSTRAP_STATE_DIR}"
 }
 
 _log() {
@@ -48,7 +58,7 @@ ensure_command() {
         return 0
     fi
     if [[ -n "${pkg}" ]]; then
-        install_packages pacman "${pkg}"
+        install_packages "${pkg}"
     fi
     if ! command -v "${cmd}" >/dev/null 2>&1; then
         log_error "Required command '${cmd}' not available."
@@ -75,7 +85,16 @@ ensure_sudo() {
 }
 
 install_packages() {
-    local manager="$1"; shift
+    local manager
+    case "$1" in
+        pacman|yay|paru)
+            manager="$1"
+            shift
+            ;;
+        *)
+            manager="${PACKAGE_MANAGER:-pacman}"
+            ;;
+    esac
     local pkgs=("$@")
     if [[ "${#pkgs[@]}" -eq 0 ]]; then
         return 0
@@ -83,18 +102,19 @@ install_packages() {
     local cmd_label=""
     local cmd_string=""
     local pkg_list="${pkgs[*]}"
+    local status=0
 
     case "${manager}" in
         pacman)
             cmd_string="sudo pacman --noconfirm --needed -S ${pkg_list}"
             log_info "[pacman] ${cmd_string}"
-            sudo pacman --noconfirm --needed -S "${pkgs[@]}" | tee -a "${CTF_BOOTSTRAP_LOG_FILE}"
+            sudo pacman --noconfirm --needed -S "${pkgs[@]}" | tee -a "${CTF_BOOTSTRAP_LOG_FILE}" || status=$?
             cmd_label="Command (pacman)"
             ;;
         yay|paru)
             cmd_string="${manager} --noconfirm --needed -S ${pkg_list}"
             log_info "[${manager}] ${cmd_string}"
-            "${manager}" --noconfirm --needed -S "${pkgs[@]}" | tee -a "${CTF_BOOTSTRAP_LOG_FILE}"
+            "${manager}" --noconfirm --needed -S "${pkgs[@]}" | tee -a "${CTF_BOOTSTRAP_LOG_FILE}" || status=$?
             cmd_label="Command (${manager})"
             ;;
         *)
@@ -103,31 +123,19 @@ install_packages() {
             ;;
     esac
 
+    if (( status != 0 )); then
+        log_error "Package installation command failed (exit ${status})."
+        return "${status}"
+    fi
+
     if [[ -n "${cmd_label}" ]]; then
         record_summary "${cmd_label}" "${cmd_string}"
     fi
 }
 
-aur_helper() {
-    if command -v yay >/dev/null 2>&1; then
-        echo "yay"
-        return
-    fi
-    if command -v paru >/dev/null 2>&1; then
-        echo "paru"
-        return
-    fi
-    echo ""
-}
-
-require_aur_helper() {
-    local helper
-    helper="$(aur_helper)"
-    if [[ -z "${helper}" ]]; then
-        log_warn "No AUR helper detected."
-        return 1
-    fi
-    echo "${helper}"
+pacman_has_package() {
+    local pkg="$1"
+    pacman -Si "${pkg}" >/dev/null 2>&1
 }
 
 detect_virtualbox() {
@@ -139,6 +147,168 @@ detect_virtualbox() {
         echo "virtualbox"
     else
         echo "${virt}"
+    fi
+}
+
+manager_state_file() {
+    ensure_state_dir
+    printf "%s\n" "${CTF_BOOTSTRAP_STATE_DIR}/package_manager"
+}
+
+update_state_file() {
+    ensure_state_dir
+    printf "%s\n" "${CTF_BOOTSTRAP_STATE_DIR}/initial_update_done"
+}
+
+load_package_manager() {
+    local file
+    file="$(manager_state_file)"
+    if [[ -f "${file}" ]]; then
+        local mgr
+        mgr="$(<"${file}")"
+        if command -v "${mgr}" >/dev/null 2>&1; then
+            PACKAGE_MANAGER="${mgr}"
+            return 0
+        fi
+        log_warn "Stored package manager '${mgr}' not found; re-selecting."
+    fi
+    return 1
+}
+
+save_package_manager() {
+    local mgr="$1"
+    local file
+    file="$(manager_state_file)"
+    printf "%s\n" "${mgr}" > "${file}"
+}
+
+install_yay_helper() {
+    if command -v yay >/dev/null 2>&1; then
+        return 0
+    fi
+    log_info "Installing yay AUR helper."
+    sudo pacman --noconfirm --needed -S base-devel git
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    git clone https://aur.archlinux.org/yay.git "${tmpdir}/yay"
+    (cd "${tmpdir}/yay" && makepkg -si --noconfirm)
+    rm -rf "${tmpdir}"
+}
+
+install_paru_helper() {
+    if command -v paru >/dev/null 2>&1; then
+        return 0
+    fi
+    log_info "Installing paru AUR helper."
+    sudo pacman --noconfirm --needed -S base-devel git
+    local tmpdir
+    tmpdir="$(mktemp -d)"
+    git clone https://aur.archlinux.org/paru.git "${tmpdir}/paru"
+    (cd "${tmpdir}/paru" && makepkg -si --noconfirm)
+    rm -rf "${tmpdir}"
+}
+
+set_package_manager() {
+    local mgr="$1"
+    PACKAGE_MANAGER="${mgr}"
+    save_package_manager "${mgr}"
+    record_summary "Package manager" "${mgr}"
+}
+
+perform_system_update() {
+    local mgr="${PACKAGE_MANAGER:-pacman}"
+    local status=0
+    local cmd=""
+    case "${mgr}" in
+        pacman)
+            cmd="sudo pacman --noconfirm -Syu"
+            log_info "[pacman] ${cmd}"
+            sudo pacman --noconfirm -Syu | tee -a "${CTF_BOOTSTRAP_LOG_FILE}" || status=$?
+            ;;
+        yay|paru)
+            cmd="${mgr} --noconfirm -Syu"
+            log_info "[${mgr}] ${cmd}"
+            "${mgr}" --noconfirm -Syu | tee -a "${CTF_BOOTSTRAP_LOG_FILE}" || status=$?
+            ;;
+        *)
+            log_warn "Unknown package manager '${mgr}' for system update; defaulting to pacman."
+            PACKAGE_MANAGER="pacman"
+            set_package_manager "pacman"
+            perform_system_update
+            ;;
+    esac
+
+    if (( status != 0 )); then
+        log_error "System update command failed (exit ${status})."
+        return "${status}"
+    fi
+
+    if [[ -n "${cmd}" ]]; then
+        record_summary "Command (${mgr})" "${cmd}"
+    fi
+}
+
+ensure_package_manager() {
+    if [[ -n "${PACKAGE_MANAGER}" ]]; then
+        return
+    fi
+
+    if load_package_manager; then
+        :
+    else
+        local available_default="pacman"
+        if command -v yay >/dev/null 2>&1; then
+            available_default="yay"
+        elif command -v paru >/dev/null 2>&1; then
+            available_default="paru"
+        fi
+
+        local choice=""
+        while [[ -z "${choice}" ]]; do
+            choice="$(prompt_single_choice \
+                "Choose the package manager to use (0 or q to default to pacman):" \
+                "${available_default}" \
+                "yay:Use yay (AUR helper, handles official repos)" \
+                "paru:Use paru (AUR helper, handles official repos)" \
+                "pacman:Use pacman only")"
+
+            if (( PROMPT_CHOICES_EXIT_REQUESTED )); then
+                log_warn "Defaulting to pacman."
+                choice="pacman"
+            elif [[ -z "${choice}" ]]; then
+                choice="${available_default}"
+            fi
+        done
+
+        case "${choice}" in
+            yay)
+                install_yay_helper
+                ;;
+            paru)
+                install_paru_helper
+                ;;
+            pacman)
+                ensure_pacman
+                ;;
+            *)
+                log_warn "Unexpected package manager choice '${choice}', defaulting to pacman."
+                choice="pacman"
+                ;;
+        esac
+
+        set_package_manager "${choice}"
+    fi
+
+    if [[ -z "${PACKAGE_MANAGER}" ]]; then
+        PACKAGE_MANAGER="pacman"
+        save_package_manager "${PACKAGE_MANAGER}"
+    fi
+
+    local update_flag
+    update_flag="$(update_state_file)"
+    if [[ ! -f "${update_flag}" ]]; then
+        perform_system_update
+        touch "${update_flag}"
     fi
 }
 

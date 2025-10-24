@@ -9,6 +9,7 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 CTF_MODULES=(
     "install_ctf_reversing.sh:Reversing tools (Ghidra, Cutter, radare2...)"

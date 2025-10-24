@@ -7,24 +7,25 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 install_posh() {
-    install_packages pacman oh-my-posh
+    install_packages oh-my-posh
     record_summary "Extras" "oh-my-posh"
 }
 
 install_starship() {
-    install_packages pacman starship
+    install_packages starship
     record_summary "Extras" "Starship prompt"
 }
 
 install_terminal_theme() {
-    install_packages pacman alacritty
+    install_packages alacritty
     record_summary "Extras" "Alacritty terminal"
 }
 
 install_misc() {
-    install_packages pacman neofetch yq
+    install_packages neofetch yq
     record_summary "Extras" "neofetch, yq"
 }
 

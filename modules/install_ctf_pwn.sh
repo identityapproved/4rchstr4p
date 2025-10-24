@@ -7,10 +7,11 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 ensure_pipx() {
     if ! command -v pipx >/dev/null 2>&1; then
-        install_packages pacman pipx
+        install_packages pipx
     fi
 }
 
@@ -27,9 +28,6 @@ install_pwn_tools() {
         "one_gadget:one_gadget (AUR)" \
         "qemu:QEMU full suite")
 
-    local helper
-    helper="$(require_aur_helper || true)"
-
     for item in "${selections[@]}"; do
         case "${item}" in
             pwntools)
@@ -37,18 +35,17 @@ install_pwn_tools() {
                 record_summary "Pwn" "pwntools via pipx"
                 ;;
             gef)
-                install_packages pacman gdb curl
+                install_packages gdb curl
                 if [[ ! -f "${HOME}/.gdbinit-gef.py" ]]; then
                     curl -fsSL https://gef.blah.cat/sh | sh
                 fi
                 record_summary "Pwn" "GEF"
                 ;;
             pwndbg)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" pwndbg
+                if install_packages pwndbg; then
                     record_summary "Pwn" "pwndbg"
                 else
-                    log_warn "pwndbg requires AUR helper; skipped."
+                    log_warn "Failed to install pwndbg."
                 fi
                 ;;
             ropgadget)
@@ -56,16 +53,18 @@ install_pwn_tools() {
                 record_summary "Pwn" "ROPgadget via pipx"
                 ;;
             one_gadget)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" one_gadget
+                if install_packages one_gadget; then
                     record_summary "Pwn" "one_gadget"
                 else
-                    log_warn "one_gadget requires AUR helper; skipped."
+                    log_warn "Failed to install one_gadget."
                 fi
                 ;;
             qemu)
-                install_packages pacman qemu qemu-arch-extra
-                record_summary "Pwn" "QEMU suite"
+                if install_packages qemu qemu-arch-extra; then
+                    record_summary "Pwn" "QEMU suite"
+                else
+                    log_warn "Failed to install QEMU suite."
+                fi
                 ;;
         esac
     done

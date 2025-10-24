@@ -8,28 +8,29 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 ensure_pipx() {
     if ! command -v pipx >/dev/null 2>&1; then
-        install_packages pacman pipx
+        install_packages pipx
     fi
 }
 
 install_python() {
     log_info "Installing Python tooling."
-    install_packages pacman python python-pip python-virtualenv
+    install_packages python python-pip python-virtualenv
     ensure_pipx
     record_summary "Languages" "Python + pipx"
 }
 
 install_go() {
-    install_packages pacman go
+    install_packages go
     record_summary "Languages" "Go"
 }
 
 install_rust() {
     if ! command -v rustup >/dev/null 2>&1; then
-        install_packages pacman rustup
+        install_packages rustup
     fi
     rustup toolchain install stable --profile default
     rustup default stable
@@ -37,7 +38,7 @@ install_rust() {
 }
 
 install_node() {
-    install_packages pacman fnm
+    install_packages fnm
     if command -v fnm >/dev/null 2>&1; then
         fnm install --lts
         fnm use --lts
@@ -46,17 +47,17 @@ install_node() {
 }
 
 install_ruby() {
-    install_packages pacman ruby rubygems bundler
+    install_packages ruby rubygems bundler
     record_summary "Languages" "Ruby"
 }
 
 install_perl() {
-    install_packages pacman perl perl-libwww perl-json
+    install_packages perl perl-libwww perl-json
     record_summary "Languages" "Perl"
 }
 
 install_java() {
-    install_packages pacman jdk-openjdk
+    install_packages jdk-openjdk
     record_summary "Languages" "OpenJDK"
 }
 

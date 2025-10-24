@@ -14,6 +14,7 @@ main() {
     init_environment "${SCRIPT_DIR}"
     ensure_pacman
     ensure_sudo
+    ensure_package_manager
 
     log_section "Arch Linux CTF bootstrap started"
 

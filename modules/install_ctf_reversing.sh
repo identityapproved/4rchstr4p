@@ -7,6 +7,7 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 install_reversing() {
     mapfile -t selections < <(prompt_choices \
@@ -18,38 +19,39 @@ install_reversing() {
         "binaryninja:Binary Ninja (manual install)" \
         "frida:Frida tools")
 
-    local helper
-    helper="$(require_aur_helper || true)"
-
     for item in "${selections[@]}"; do
         case "${item}" in
             ghidra)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" ghidra
+                if install_packages ghidra; then
                     record_summary "Reversing" "Ghidra"
                 else
-                    log_warn "Ghidra requires AUR helper; skipped."
+                    log_warn "Failed to install Ghidra with ${PACKAGE_MANAGER}."
                 fi
                 ;;
             radare)
-                install_packages pacman radare2 radare2-cutter
-                record_summary "Reversing" "radare2"
+                if install_packages radare2 radare2-cutter; then
+                    record_summary "Reversing" "radare2"
+                else
+                    log_warn "Failed to install radare2."
+                fi
                 ;;
             cutter)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" cutter
+                if install_packages cutter; then
+                    record_summary "Reversing" "Cutter"
                 else
-                    install_packages pacman cutter
+                    log_warn "Failed to install Cutter."
                 fi
-                record_summary "Reversing" "Cutter"
                 ;;
             binaryninja)
                 log_warn "Binary Ninja not available via repos; install manually."
                 record_summary "Reversing" "Binary Ninja (manual)"
                 ;;
             frida)
-                install_packages pacman python-frida frida-tools
-                record_summary "Reversing" "Frida"
+                if install_packages python-frida frida-tools; then
+                    record_summary "Reversing" "Frida"
+                else
+                    log_warn "Failed to install Frida tools."
+                fi
                 ;;
         esac
     done

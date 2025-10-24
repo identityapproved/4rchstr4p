@@ -8,25 +8,26 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 install_shell() {
     local shell="$1"
-    install_packages pacman "${shell}"
+    install_packages "${shell}"
     record_summary "Shell" "${shell}"
 }
 
 install_fzf() {
-    install_packages pacman fzf fd
+    install_packages fzf fd
     record_summary "CLI" "fzf + fd"
 }
 
 install_tmux() {
-    install_packages pacman tmux
+    install_packages tmux
     record_summary "Terminal" "tmux"
 }
 
 install_misc_cli() {
-    install_packages pacman bat exa tree ripgrep fd dust procs jq
+    install_packages bat exa tree ripgrep fd dust procs jq
     record_summary "CLI" "bat, exa, tree, ripgrep, fd, dust, procs, jq"
 }
 
@@ -38,29 +39,35 @@ install_fonts() {
         "firacode:nerd-fonts-fira-code" \
         "jetbrains:nerd-fonts-jetbrains-mono" \
         "powerline:powerline-fonts")
-    local helper
-    helper="$(require_aur_helper || true)"
     for font in "${fonts[@]}"; do
         case "${font}" in
             iosevka)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" ttf-iosevka-nerd
+                if install_packages ttf-iosevka-nerd; then
                     record_summary "Fonts" "Iosevka Nerd"
                 else
-                    log_warn "Iosevka Nerd requires AUR helper; skipped."
+                    log_warn "Failed to install Iosevka Nerd font with ${PACKAGE_MANAGER}; verify repository availability."
                 fi
                 ;;
             firacode)
-                install_packages pacman nerd-fonts-fira-code
-                record_summary "Fonts" "FiraCode Nerd"
+                if install_packages nerd-fonts-fira-code; then
+                    record_summary "Fonts" "FiraCode Nerd"
+                else
+                    log_warn "Failed to install FiraCode Nerd font."
+                fi
                 ;;
             jetbrains)
-                install_packages pacman nerd-fonts-jetbrains-mono
-                record_summary "Fonts" "JetBrainsMono Nerd"
+                if install_packages nerd-fonts-jetbrains-mono; then
+                    record_summary "Fonts" "JetBrainsMono Nerd"
+                else
+                    log_warn "Failed to install JetBrainsMono Nerd font."
+                fi
                 ;;
             powerline)
-                install_packages pacman powerline-fonts
-                record_summary "Fonts" "Powerline fonts"
+                if install_packages powerline-fonts; then
+                    record_summary "Fonts" "Powerline fonts"
+                else
+                    log_warn "Failed to install powerline fonts."
+                fi
                 ;;
         esac
     done
@@ -75,13 +82,13 @@ choose_editor() {
 }
 
 install_vim() {
-    install_packages pacman vim
+    install_packages vim
     record_summary "Editor" "Vim"
 }
 
 install_fnm_runtime() {
     if ! command -v fnm >/dev/null 2>&1; then
-        install_packages pacman fnm
+        install_packages fnm
     fi
 
     if command -v fnm >/dev/null 2>&1; then
@@ -94,7 +101,7 @@ setup_lazyvim() {
     local nvim_dir="${HOME}/.config/nvim"
     ensure_command git git
 
-    install_packages pacman neovim ripgrep fd unzip python-pynvim
+    install_packages neovim ripgrep fd unzip python-pynvim
     install_fnm_runtime
 
     if [[ -d "${nvim_dir}" && ! -L "${nvim_dir}" ]]; then

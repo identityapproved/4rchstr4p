@@ -10,6 +10,7 @@ logs/
 # Build or cache directories that might appear during tooling setup
 .cache/
 .pcache/
+.state/
 
 # Node / npm caches if LazyVim or tooling pulls them locally
 node_modules/

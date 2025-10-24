@@ -8,10 +8,11 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 ensure_git() {
     if ! command -v git >/dev/null 2>&1; then
-        install_packages pacman git
+        install_packages git
     fi
 }
 

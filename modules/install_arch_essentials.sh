@@ -8,47 +8,7 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
-
-prompt_helper_choice() {
-    prompt_single_choice \
-        "Select an AUR helper to install (press Enter to skip):" \
-        "" \
-        "yay:Install yay (Go-based helper)" \
-        "paru:Install paru (Rust-based helper)"
-}
-
-install_aur_helper() {
-    local helper="$1"
-    if [[ -z "${helper}" ]]; then
-        log_warn "Skipping AUR helper installation."
-        return
-    fi
-    if command -v "${helper}" >/dev/null 2>&1; then
-        log_info "${helper} already present."
-        record_summary "AUR helper" "${helper} (already present)"
-        return
-    fi
-
-    log_info "Installing ${helper}."
-    sudo pacman --noconfirm --needed -S base-devel git
-    local tmpdir
-    tmpdir="$(mktemp -d)"
-    case "${helper}" in
-        yay)
-            git clone https://aur.archlinux.org/yay.git "${tmpdir}/yay"
-            (cd "${tmpdir}/yay" && makepkg -si --noconfirm)
-            ;;
-        paru)
-            git clone https://aur.archlinux.org/paru.git "${tmpdir}/paru"
-            (cd "${tmpdir}/paru" && makepkg -si --noconfirm)
-            ;;
-        *)
-            log_warn "Unknown helper '${helper}', skipping."
-            ;;
-    esac
-    rm -rf "${tmpdir}"
-    record_summary "AUR helper" "${helper}"
-}
+ensure_package_manager
 
 install_arch_packages() {
     mapfile -t essentials < <(prompt_choices \
@@ -62,59 +22,85 @@ install_arch_packages() {
         "containers:Podman stack" \
         "fonts:Base fonts (ttf-dejavu, liberation)" )
 
-    local helper_manager
-    helper_manager="$(aur_helper)"
-
     for choice in "${essentials[@]}"; do
         case "${choice}" in
             update)
-                log_info "Refreshing package databases."
-                sudo pacman -Syyu --noconfirm
-                sudo pacman --noconfirm -S archlinux-keyring
-                record_summary "System" "Full system upgrade"
+                perform_system_update
+                install_packages archlinux-keyring
+                record_summary "System" "Updated via ${PACKAGE_MANAGER}"
                 ;;
             base-devel)
-                install_packages pacman base-devel git cmake ninja
+                install_packages base-devel git cmake ninja
                 record_summary "Packages" "base-devel"
                 ;;
             network)
-                install_packages pacman net-tools inetutils traceroute nmap openbsd-netcat tcpdump
+                install_packages net-tools inetutils traceroute nmap openbsd-netcat tcpdump
                 record_summary "Packages" "networking tools"
                 ;;
             virtualbox)
                 virt="$(detect_virtualbox)"
                 if [[ "${virt}" == "virtualbox" ]]; then
-                    install_packages pacman virtualbox-guest-utils virtualbox-guest-modules-arch
-                    sudo systemctl enable --now vboxservice.service
-                    record_summary "VirtualBox" "Guest additions installed"
+                    local utils_pkg="virtualbox-guest-utils"
+                    if ! pacman_has_package "${utils_pkg}" && pacman_has_package "virtualbox-guest-utils-nox"; then
+                        utils_pkg="virtualbox-guest-utils-nox"
+                    fi
+
+                    local modules_pkg=""
+                    if [[ "$(uname -r)" == *"-arch"* ]]; then
+                        modules_pkg="virtualbox-guest-modules-arch"
+                    else
+                        modules_pkg="virtualbox-guest-dkms"
+                    fi
+                    if [[ -n "${modules_pkg}" && ! pacman_has_package "${modules_pkg}" ]]; then
+                        if pacman_has_package "virtualbox-guest-dkms"; then
+                            modules_pkg="virtualbox-guest-dkms"
+                        else
+                            modules_pkg=""
+                        fi
+                    fi
+
+                    local -a packages=("${utils_pkg}")
+                    if [[ -n "${modules_pkg}" ]]; then
+                        packages+=("${modules_pkg}")
+                    fi
+
+                    if [[ ${#packages[@]} -eq 0 ]]; then
+                        log_warn "No suitable VirtualBox guest packages found in repositories; skipping."
+                        record_summary "VirtualBox" "Skipped (packages unavailable)"
+                    else
+                        local install_ok=0
+                        if install_packages "${packages[@]}"; then
+                            install_ok=1
+                        else
+                            log_error "${PACKAGE_MANAGER} failed to install VirtualBox guest packages (${packages[*]})."
+                        fi
+                        if (( install_ok )); then
+                            sudo systemctl enable --now vboxservice.service || log_warn "Could not enable vboxservice; verify manually."
+                            record_summary "VirtualBox" "Guest additions installed (${packages[*]})"
+                        else
+                            record_summary "VirtualBox" "Guest additions installation failed"
+                        fi
+                    fi
                 else
                     log_warn "VirtualBox not detected (found: ${virt}); skipping guest additions."
                     record_summary "VirtualBox" "Skipped (not detected)"
                 fi
                 ;;
             utils)
-                install_packages pacman htop lsof p7zip unzip zip tree wget curl bind ripgrep rsync
+                install_packages htop lsof p7zip unzip zip tree wget curl bind ripgrep rsync
                 record_summary "Packages" "System utilities"
                 ;;
             containers)
-                install_packages pacman podman podman-docker buildah skopeo
+                install_packages podman podman-docker buildah skopeo
                 sudo systemctl enable --now podman.socket
                 record_summary "Containers" "Podman stack"
                 ;;
             fonts)
-                install_packages pacman ttf-dejavu ttf-liberation noto-fonts
+                install_packages ttf-dejavu ttf-liberation noto-fonts
                 record_summary "Fonts" "Base fonts"
                 ;;
         esac
     done
-
-    if [[ -z "${helper_manager}" ]]; then
-        helper="$(prompt_helper_choice)"
-        install_aur_helper "${helper}"
-    else
-        log_info "Using existing AUR helper: ${helper_manager}"
-        record_summary "AUR helper" "${helper_manager} (pre-existing)"
-    fi
 }
 
 install_arch_packages

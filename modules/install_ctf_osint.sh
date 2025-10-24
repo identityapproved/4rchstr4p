@@ -7,6 +7,7 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 install_osint_tools() {
     mapfile -t selections < <(prompt_choices \
@@ -18,37 +19,41 @@ install_osint_tools() {
         "holehe:holehe (email reuse)" \
         "maigret:Maigret (AUR)")
 
-    local helper
-    helper="$(require_aur_helper || true)"
-
     for item in "${selections[@]}"; do
         case "${item}" in
             maltego)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" maltego
+                if install_packages maltego; then
                     record_summary "OSINT" "Maltego"
                 else
-                    log_warn "Maltego requires AUR helper; skipped."
+                    log_warn "Failed to install Maltego."
                 fi
                 ;;
             spiderfoot)
-                install_packages pacman spiderfoot
-                record_summary "OSINT" "SpiderFoot"
+                if install_packages spiderfoot; then
+                    record_summary "OSINT" "SpiderFoot"
+                else
+                    log_warn "Failed to install SpiderFoot."
+                fi
                 ;;
             sherlock)
-                install_packages pacman sherlock
-                record_summary "OSINT" "Sherlock"
+                if install_packages sherlock; then
+                    record_summary "OSINT" "Sherlock"
+                else
+                    log_warn "Failed to install Sherlock."
+                fi
                 ;;
             holehe)
-                install_packages pacman holehe
-                record_summary "OSINT" "holehe"
+                if install_packages holehe; then
+                    record_summary "OSINT" "holehe"
+                else
+                    log_warn "Failed to install holehe."
+                fi
                 ;;
             maigret)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" maigret
+                if install_packages maigret; then
                     record_summary "OSINT" "Maigret"
                 else
-                    log_warn "Maigret requires AUR helper; skipped."
+                    log_warn "Failed to install Maigret."
                 fi
                 ;;
         esac

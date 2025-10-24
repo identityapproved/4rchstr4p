@@ -9,6 +9,7 @@ DOTFILES_DIR="${ROOT_DIR}/dotfiles"
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 backup_file() {
     local target="$1"

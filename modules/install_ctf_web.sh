@@ -7,6 +7,7 @@ ROOT_DIR="${SCRIPT_DIR}/.."
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
+ensure_package_manager
 
 install_web_tools() {
     mapfile -t selections < <(prompt_choices \
@@ -20,45 +21,55 @@ install_web_tools() {
         "sqlmap:sqlmap" \
         "ffuf:ffuf (AUR)")
 
-    local helper
-    helper="$(require_aur_helper || true)"
-
     for item in "${selections[@]}"; do
         case "${item}" in
             burp)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" burpsuite
+                if install_packages burpsuite; then
                     record_summary "Web" "Burp Suite"
                 else
-                    log_warn "Burp Suite requires AUR helper; skipped."
+                    log_warn "Failed to install Burp Suite."
                 fi
                 ;;
             zap)
-                install_packages pacman zaproxy
-                record_summary "Web" "OWASP ZAP"
+                if install_packages zaproxy; then
+                    record_summary "Web" "OWASP ZAP"
+                else
+                    log_warn "Failed to install OWASP ZAP."
+                fi
                 ;;
             dirsearch)
-                install_packages pacman dirsearch
-                record_summary "Web" "dirsearch"
+                if install_packages dirsearch; then
+                    record_summary "Web" "dirsearch"
+                else
+                    log_warn "Failed to install dirsearch."
+                fi
                 ;;
             gobuster)
-                install_packages pacman gobuster
-                record_summary "Web" "gobuster"
+                if install_packages gobuster; then
+                    record_summary "Web" "gobuster"
+                else
+                    log_warn "Failed to install gobuster."
+                fi
                 ;;
             wfuzz)
-                install_packages pacman wfuzz
-                record_summary "Web" "wfuzz"
+                if install_packages wfuzz; then
+                    record_summary "Web" "wfuzz"
+                else
+                    log_warn "Failed to install wfuzz."
+                fi
                 ;;
             sqlmap)
-                install_packages pacman sqlmap
-                record_summary "Web" "sqlmap"
+                if install_packages sqlmap; then
+                    record_summary "Web" "sqlmap"
+                else
+                    log_warn "Failed to install sqlmap."
+                fi
                 ;;
             ffuf)
-                if [[ -n "${helper}" ]]; then
-                    install_packages "${helper}" ffuf
+                if install_packages ffuf; then
                     record_summary "Web" "ffuf"
                 else
-                    log_warn "ffuf requires AUR helper; skipped."
+                    log_warn "Failed to install ffuf."
                 fi
                 ;;
         esac
