@@ -4,6 +4,8 @@
 set -euo pipefail
 
 LOG_COLORS=${LOG_COLORS:-1}
+PROMPT_CHOICES_LAST_INPUT=""
+PROMPT_CHOICES_EXIT_REQUESTED=0
 
 init_environment() {
     local root="${1:-$(pwd)}"
@@ -78,19 +80,32 @@ install_packages() {
     if [[ "${#pkgs[@]}" -eq 0 ]]; then
         return 0
     fi
+    local cmd_label=""
+    local cmd_string=""
+    local pkg_list="${pkgs[*]}"
 
     case "${manager}" in
         pacman)
+            cmd_string="sudo pacman --noconfirm --needed -S ${pkg_list}"
+            log_info "[pacman] ${cmd_string}"
             sudo pacman --noconfirm --needed -S "${pkgs[@]}" | tee -a "${CTF_BOOTSTRAP_LOG_FILE}"
+            cmd_label="Command (pacman)"
             ;;
         yay|paru)
+            cmd_string="${manager} --noconfirm --needed -S ${pkg_list}"
+            log_info "[${manager}] ${cmd_string}"
             "${manager}" --noconfirm --needed -S "${pkgs[@]}" | tee -a "${CTF_BOOTSTRAP_LOG_FILE}"
+            cmd_label="Command (${manager})"
             ;;
         *)
             log_error "Unknown package manager '${manager}'"
             return 1
             ;;
     esac
+
+    if [[ -n "${cmd_label}" ]]; then
+        record_summary "${cmd_label}" "${cmd_string}"
+    fi
 }
 
 aur_helper() {
@@ -116,15 +131,15 @@ require_aur_helper() {
 }
 
 detect_virtualbox() {
-    if systemd-detect-virt --quiet --vm --type oracle; then
+    local virt
+    virt="$(systemd-detect-virt 2>/dev/null || true)"
+    if [[ -z "${virt}" || "${virt}" == "none" ]]; then
+        echo "none"
+    elif [[ "${virt}" == "oracle" ]]; then
         echo "virtualbox"
-        return
+    else
+        echo "${virt}"
     fi
-    if systemd-detect-virt --quiet --vm; then
-        echo "other-vm"
-        return
-    fi
-    echo "none"
 }
 
 run_module() {
@@ -161,6 +176,9 @@ prompt_choices() {
         return 0
     fi
 
+    PROMPT_CHOICES_LAST_INPUT=""
+    PROMPT_CHOICES_EXIT_REQUESTED=0
+
     if [[ -n "${title}" ]]; then
         printf "%s\n" "${title}" >&2
     fi
@@ -187,18 +205,31 @@ prompt_choices() {
 
     local answer
     read -r answer
+    PROMPT_CHOICES_LAST_INPUT="${answer}"
     if [[ -z "${answer}" ]]; then
         if [[ -z "${default}" ]]; then
             return 0
         fi
         answer="${default}"
+        PROMPT_CHOICES_LAST_INPUT="${default}"
     fi
 
     declare -A selections=()
+    local quit_requested=0
     for token in ${answer}; do
+        local lower_token
+        lower_token="$(printf "%s" "${token}" | tr '[:upper:]' '[:lower:]')"
+        if [[ "${lower_token}" == "q" || "${lower_token}" == "quit" || "${lower_token}" == "exit" || "${token}" == "0" ]]; then
+            quit_requested=1
+            continue
+        fi
         if [[ "${token}" =~ ^([0-9]+)-([0-9]+)$ ]]; then
             local start="${BASH_REMATCH[1]}"
             local end="${BASH_REMATCH[2]}"
+            if (( start == 0 || end == 0 )); then
+                quit_requested=1
+                continue
+            fi
             if (( start > end )); then
                 local tmp="${start}"
                 start="${end}"
@@ -215,6 +246,8 @@ prompt_choices() {
             local num="${token}"
             if (( num >= 1 && num <= ${#keys[@]} )); then
                 selections["${keys[$((num-1))]}"]=1
+            elif (( num == 0 )); then
+                quit_requested=1
             else
                 log_warn "Ignoring out-of-range selection '${token}'."
             fi
@@ -234,6 +267,12 @@ prompt_choices() {
         fi
     done
 
+    if (( quit_requested )); then
+        PROMPT_CHOICES_EXIT_REQUESTED=1
+        return 0
+    fi
+
+    PROMPT_CHOICES_EXIT_REQUESTED=0
     for key in "${keys[@]}"; do
         if [[ -n "${selections[$key]:-}" ]]; then
             printf "%s\n" "${key}"

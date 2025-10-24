@@ -17,42 +17,52 @@ main() {
 
     log_section "Arch Linux CTF bootstrap started"
 
-    mapfile -t top_choices < <(prompt_choices \
-        "Select the categories you want to configure:" \
-        "arch languages shell ctf" \
-        "arch:Arch Linux essentials (helpers, system tuning, virtualization)" \
-        "languages:Programming languages and runtimes" \
-        "shell:Shell & terminal tooling" \
-        "ctf:CTF tooling suite (choose sub-categories inside)" \
-        "extras:Optional extras & polish")
+    local -a category_options=(
+        "arch:Arch Linux essentials (helpers, system tuning, virtualization)"
+        "languages:Programming languages and runtimes"
+        "shell:Shell & terminal tooling"
+        "ctf:CTF tooling suite (choose sub-categories inside)"
+        "extras:Optional extras & polish"
+    )
 
-    if [[ "${#top_choices[@]}" -eq 0 ]]; then
-        log_warn "No categories selected; exiting without changes."
-        print_summary
-        exit 0
-    fi
+    while true; do
+        mapfile -t top_choices < <(prompt_choices \
+            "Select the categories you want to configure (0 or q to quit):" \
+            "arch languages shell ctf" \
+            "${category_options[@]}")
 
-    for choice in "${top_choices[@]}"; do
-        case "${choice}" in
-            arch)
-                run_module "${MODULE_DIR}/install_arch_essentials.sh"
-                ;;
-            languages)
-                run_module "${MODULE_DIR}/install_programming_languages.sh"
-                ;;
-            shell)
-                run_module "${MODULE_DIR}/install_shell_tools.sh"
-                ;;
-            ctf)
-                run_module "${MODULE_DIR}/install_ctf_suite.sh"
-                ;;
-            extras)
-                run_module "${MODULE_DIR}/install_optional_extras.sh"
-                ;;
-            *)
-                log_warn "Unknown selection '${choice}', skipping."
-                ;;
-        esac
+        if (( PROMPT_CHOICES_EXIT_REQUESTED )); then
+            log_info "Exit requested; leaving bootstrap menu."
+            break
+        fi
+
+        if [[ "${#top_choices[@]}" -eq 0 ]]; then
+            log_warn "No categories selected; returning to menu."
+            continue
+        fi
+
+        for choice in "${top_choices[@]}"; do
+            case "${choice}" in
+                arch)
+                    run_module "${MODULE_DIR}/install_arch_essentials.sh"
+                    ;;
+                languages)
+                    run_module "${MODULE_DIR}/install_programming_languages.sh"
+                    ;;
+                shell)
+                    run_module "${MODULE_DIR}/install_shell_tools.sh"
+                    ;;
+                ctf)
+                    run_module "${MODULE_DIR}/install_ctf_suite.sh"
+                    ;;
+                extras)
+                    run_module "${MODULE_DIR}/install_optional_extras.sh"
+                    ;;
+                *)
+                    log_warn "Unknown selection '${choice}', skipping."
+                    ;;
+            esac
+        done
     done
 
     log_section "Bootstrap complete"
