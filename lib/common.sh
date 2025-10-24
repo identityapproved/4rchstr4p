@@ -133,9 +133,26 @@ install_packages() {
     fi
 }
 
+package_available() {
+    local pkg="$1"
+    local mgr="${2:-${PACKAGE_MANAGER:-pacman}}"
+
+    case "${mgr}" in
+        pacman)
+            pacman -Si "${pkg}" >/dev/null 2>&1
+            ;;
+        yay|paru)
+            "${mgr}" -Si "${pkg}" >/dev/null 2>&1
+            ;;
+        *)
+            pacman -Si "${pkg}" >/dev/null 2>&1
+            ;;
+    esac
+}
+
 pacman_has_package() {
     local pkg="$1"
-    pacman -Si "${pkg}" >/dev/null 2>&1
+    package_available "${pkg}" "pacman"
 }
 
 detect_virtualbox() {

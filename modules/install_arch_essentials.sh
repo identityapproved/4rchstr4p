@@ -40,26 +40,25 @@ install_arch_packages() {
             virtualbox)
                 virt="$(detect_virtualbox)"
                 if [[ "${virt}" == "virtualbox" ]]; then
-                    local utils_pkg="virtualbox-guest-utils"
-                    if ! pacman_has_package "${utils_pkg}" && pacman_has_package "virtualbox-guest-utils-nox"; then
+                    local utils_pkg=""
+                    if package_available "virtualbox-guest-utils"; then
+                        utils_pkg="virtualbox-guest-utils"
+                    elif package_available "virtualbox-guest-utils-nox"; then
                         utils_pkg="virtualbox-guest-utils-nox"
                     fi
 
                     local modules_pkg=""
-                    if [[ "$(uname -r)" == *"-arch"* ]]; then
+                    if [[ "$(uname -r)" == *"-arch"* ]] && package_available "virtualbox-guest-modules-arch"; then
                         modules_pkg="virtualbox-guest-modules-arch"
-                    else
+                    fi
+                    if [[ -z "${modules_pkg}" ]] && package_available "virtualbox-guest-dkms"; then
                         modules_pkg="virtualbox-guest-dkms"
                     fi
-                    if [[ -n "${modules_pkg}" && ! pacman_has_package "${modules_pkg}" ]]; then
-                        if pacman_has_package "virtualbox-guest-dkms"; then
-                            modules_pkg="virtualbox-guest-dkms"
-                        else
-                            modules_pkg=""
-                        fi
-                    fi
 
-                    local -a packages=("${utils_pkg}")
+                    local -a packages=()
+                    if [[ -n "${utils_pkg}" ]]; then
+                        packages+=("${utils_pkg}")
+                    fi
                     if [[ -n "${modules_pkg}" ]]; then
                         packages+=("${modules_pkg}")
                     fi
