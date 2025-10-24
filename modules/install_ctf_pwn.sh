@@ -6,6 +6,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 
+ensure_pipx() {
+    if ! command -v pipx >/dev/null 2>&1; then
+        install_packages pacman pipx
+    fi
+}
+
 ensure_pipx
 
 install_pwn_tools() {

@@ -12,6 +12,8 @@ These scripts automate bootstrapping an Arch Linux system for CTF competitions a
   - `install_shell_tools.sh`
   - `install_ctf_suite.sh` (dispatches to submodules)
   - `install_optional_extras.sh`
+  - `install_dotfiles.sh`
+  - `install_zsh_plugins.sh`
   - `install_ctf_reversing.sh`
   - `install_ctf_web.sh`
   - `install_ctf_osint.sh`
@@ -37,7 +39,7 @@ Logs are stored under `logs/` with timestamped files for the main run and the su
    ```bash
    ./bootstrap.sh
    ```
-4. Walk through the menus to pick the categories and tools you want.
+4. Walk through the menus to pick the categories and tools you want (including dotfile deployment and editor choice).
 5. Inspect `logs/bootstrap_<timestamp>.log` and `logs/summary_<timestamp>.txt` after completion for details.
 
 Re-running the scripts is safe: all package installs use `--needed`, and pipx installs are idempotent.
@@ -46,6 +48,8 @@ Re-running the scripts is safe: all package installs use `--needed`, and pipx in
 
 - Update defaults in each module if you prefer different selections to be pre-checked.
 - Extend the `modules/` scripts or add new ones; each entry simply sources `lib/common.sh` and records results.
+- Drop replacement configs into `dotfiles/` to have them copied into place (existing files are backed up automatically).
+- LazyVim setup relies on `fnm` to supply Node.js; adjust the helper in `install_shell_tools.sh` if you prefer a different runtime manager.
 - For offline or repetitive setups, consider caching `/var/cache/pacman/pkg` and `~/.cache/yay` (or your AUR helper of choice).
 - If you plan to import dotfiles or configure shells further, chain them from `bootstrap.sh` or add new modules.
 

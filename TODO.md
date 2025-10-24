@@ -6,7 +6,8 @@
 - [ ] Validate pipx installs for pwntools, ropgadget, and other Python tools.
 - [ ] Exercise each CTF category installer individually.
 - [ ] Review logs in `logs/` to ensure summary entries look correct.
-- [ ] Add optional dotfile imports or shell configuration if desired.
+- [ ] Verify dotfile deployment creates backups and copies configs into place.
+- [ ] Smoke test LazyVim startup (Neovim option) and confirm `fnm` provisions Node LTS.
 - [ ] Document any environment-specific tweaks (GPU drivers, virtualization quirks, etc.).
 - [ ] Create offline caching workflow for pacman/AUR packages if needed.
 - [ ] Write automated tests or lint checks for shell scripts (e.g., shellcheck, bats).
