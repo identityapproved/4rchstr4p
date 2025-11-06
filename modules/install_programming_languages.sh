@@ -12,7 +12,7 @@ ensure_package_manager
 
 ensure_pipx() {
     if ! command -v pipx >/dev/null 2>&1; then
-        install_packages pipx
+        install_packages python-pipx
     fi
 }
 

@@ -16,8 +16,7 @@ install_osint_tools() {
         "maltego:Maltego (AUR)" \
         "spiderfoot:SpiderFoot" \
         "sherlock:sherlock username hunter" \
-        "holehe:holehe (email reuse)" \
-        "maigret:Maigret (AUR)")
+        "holehe:holehe (email reuse)")
 
     for item in "${selections[@]}"; do
         case "${item}" in
@@ -47,13 +46,6 @@ install_osint_tools() {
                     record_summary "OSINT" "holehe"
                 else
                     log_warn "Failed to install holehe."
-                fi
-                ;;
-            maigret)
-                if install_packages maigret; then
-                    record_summary "OSINT" "Maigret"
-                else
-                    log_warn "Failed to install Maigret."
                 fi
                 ;;
         esac

@@ -10,11 +10,72 @@ MODULE_DIR="${SCRIPT_DIR}/modules"
 # shellcheck source=lib/common.sh
 source "${LIB_DIR}/common.sh"
 
+prompt_terminal_emulators() {
+    mapfile -t terminals < <(prompt_choices \
+        "Select terminal emulator(s) to install (0 or q to skip):" \
+        "" \
+        "kitty:Kitty GPU accelerated terminal" \
+        "alacritty:Alacritty GPU accelerated terminal" \
+        "terminator:Terminator tiling terminal" \
+        "st:Simple Terminal (suckless st)" \
+        "none:No additional terminal")
+
+    if (( PROMPT_CHOICES_EXIT_REQUESTED )) || [[ "${#terminals[@]}" -eq 0 ]]; then
+        log_info "Skipping additional terminal emulator installation."
+        return
+    fi
+
+    for term in "${terminals[@]}"; do
+        case "${term}" in
+            none)
+                log_info "No terminal emulator selected for installation."
+                return
+                ;;
+            kitty)
+                if command -v kitty >/dev/null 2>&1; then
+                    log_info "kitty already installed; skipping."
+                else
+                    install_packages kitty && record_summary "Terminal" "kitty" || log_warn "Failed to install kitty."
+                fi
+                ;;
+            alacritty)
+                if command -v alacritty >/dev/null 2>&1; then
+                    log_info "Alacritty already installed; skipping."
+                else
+                    install_packages alacritty && record_summary "Terminal" "Alacritty" || log_warn "Failed to install Alacritty."
+                fi
+                ;;
+            terminator)
+                if command -v terminator >/dev/null 2>&1; then
+                    log_info "Terminator already installed; skipping."
+                else
+                    install_packages terminator && record_summary "Terminal" "Terminator" || log_warn "Failed to install Terminator."
+                fi
+                ;;
+            st)
+                if command -v st >/dev/null 2>&1; then
+                    log_info "st already installed; skipping."
+                else
+                    if install_packages st; then
+                        record_summary "Terminal" "st (suckless)"
+                    else
+                        log_warn "Failed to install st terminal."
+                    fi
+                fi
+                ;;
+            *)
+                log_warn "Unknown terminal selection '${term}'; skipping."
+                ;;
+        esac
+    done
+}
+
 main() {
     init_environment "${SCRIPT_DIR}"
     ensure_pacman
     ensure_sudo
     ensure_package_manager
+    prompt_terminal_emulators
 
     log_section "Arch Linux CTF bootstrap started"
 
