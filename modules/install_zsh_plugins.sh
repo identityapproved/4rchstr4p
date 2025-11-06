@@ -16,8 +16,20 @@ ensure_git() {
     fi
 }
 
+expand_path() {
+    local raw="$1"
+    if [[ "${raw}" == "~" ]]; then
+        printf "%s\n" "${HOME}"
+    elif [[ "${raw}" == ~* ]]; then
+        printf "%s%s\n" "${HOME}" "${raw:1}"
+    else
+        printf "%s\n" "${raw}"
+    fi
+}
+
 ensure_oh_my_zsh() {
-    local omz_dir="${HOME}/.oh-my-zsh"
+    local omz_dir
+    omz_dir="$(expand_path "${HOME}/.oh-my-zsh")"
     if [[ -d "${omz_dir}" ]]; then
         return
     fi
@@ -34,7 +46,8 @@ ensure_oh_my_zsh() {
 sync_plugin_repo() {
     local repo="$1"
     local name="$2"
-    local dest="$3"
+    local dest
+    dest="$(expand_path "$3")"
 
     if [[ -d "${dest}/.git" ]]; then
         log_info "Updating ${name} plugin."
@@ -56,7 +69,11 @@ install_zsh_plugins() {
     ensure_git
     ensure_oh_my_zsh
 
-    local custom_root="${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}"
+    local custom_root_raw="${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}"
+    local custom_root
+    custom_root="$(expand_path "${custom_root_raw}")"
+    export ZSH_CUSTOM="${custom_root}"
+
     local plugin_dir="${custom_root}/plugins"
     mkdir -p "${plugin_dir}"
 
@@ -67,7 +84,7 @@ install_zsh_plugins() {
         "https://github.com/jeffreytse/zsh-vi-mode.git:zsh-vi-mode"
         "https://github.com/djui/alias-tips.git:alias-tips"
         "https://github.com/thirteen37/fzf-alias.git:fzf-alias"
-        "https://github.com/wbingli/zsh-wakatime.git:zsh-wakatime"
+        "https://github.com/zsh-users/zsh-history-substring-search.git:zsh-history-substring-search"
         "https://github.com/alexiszamanidis/zsh-git-fzf.git:zsh-git-fzf"
     )
 
