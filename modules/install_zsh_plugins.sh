@@ -16,6 +16,21 @@ ensure_git() {
     fi
 }
 
+ensure_oh_my_zsh() {
+    local omz_dir="${HOME}/.oh-my-zsh"
+    if [[ -d "${omz_dir}" ]]; then
+        return
+    fi
+
+    ensure_git
+    log_info "Installing Oh My Zsh framework."
+    if git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git "${omz_dir}" >/dev/null 2>&1; then
+        record_summary "Zsh" "Oh My Zsh installed"
+    else
+        log_warn "Failed to clone Oh My Zsh. Check network connectivity or clone manually."
+    fi
+}
+
 sync_plugin_repo() {
     local repo="$1"
     local name="$2"
@@ -30,14 +45,16 @@ sync_plugin_repo() {
         log_warn "Destination ${dest} exists without git metadata; skipping ${name}."
     else
         log_info "Cloning ${name} plugin."
-        git clone --depth 1 "${repo}" "${dest}" >/dev/null 2>&1 || {
-            log_warn "Clone failed for ${name}."
-        }
+        if ! git clone --depth 1 "${repo}" "${dest}" >/dev/null 2>&1; then
+            log_warn "Clone failed for ${name}; verify network and repository availability."
+            return 1
+        fi
     fi
 }
 
 install_zsh_plugins() {
     ensure_git
+    ensure_oh_my_zsh
 
     local custom_root="${ZSH_CUSTOM:-${HOME}/.oh-my-zsh/custom}"
     local plugin_dir="${custom_root}/plugins"
@@ -56,7 +73,7 @@ install_zsh_plugins() {
 
     for entry in "${plugins[@]}"; do
         IFS=":" read -r repo name <<<"${entry}"
-        sync_plugin_repo "${repo}" "${name}" "${plugin_dir}/${name}"
+        sync_plugin_repo "${repo}" "${name}" "${plugin_dir}/${name}" || continue
     done
 
     record_summary "Zsh" "Custom plugins synced"
