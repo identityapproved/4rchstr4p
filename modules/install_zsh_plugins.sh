@@ -89,7 +89,9 @@ install_zsh_plugins() {
     )
 
     for entry in "${plugins[@]}"; do
-        IFS=":" read -r repo name <<<"${entry}"
+        local repo name
+        repo="${entry%:*}"
+        name="${entry##*:}"
         sync_plugin_repo "${repo}" "${name}" "${plugin_dir}/${name}" || continue
     done
 
