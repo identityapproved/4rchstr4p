@@ -1,0 +1,43 @@
+# Ignore runtime logs created by bootstrap runs
+logs/
+
+# Temporary files created by editors or shells
+*~
+.*.sw?
+.DS_Store
+*.log
+
+# Build or cache directories that might appear during tooling setup
+.cache/
+.pcache/
+.state/
+
+# Node / npm caches if LazyVim or tooling pulls them locally
+node_modules/
+
+# Python virtual environments created ad-hoc
+venv/
+.venv/
+ENV/
+
+# Go build artifacts
+bin/
+
+# Rust cargo target directory
+target/
+
+# Sockets or tmux state files
+*.sock
+.tmux.conf.local
+
+# Pipx metadata cache when run inside repo
+pipx_venvs/
+
+# Miscellaneous shell history or session files
+*.bash_history
+*.zsh_history
+
+# Archive dumps created during testing
+*.tar
+*.tar.gz
+*.zip
