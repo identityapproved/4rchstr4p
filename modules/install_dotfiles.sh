@@ -49,6 +49,10 @@ install_dotfiles() {
         deploy_file "${DOTFILES_DIR}/tmux/tmux.conf" "${HOME}/.config/tmux/tmux.conf"
     fi
 
+    if command -v alacritty >/dev/null 2>&1 && [[ -f "${DOTFILES_DIR}/alacritty/alacritty.toml" ]]; then
+        deploy_file "${DOTFILES_DIR}/alacritty/alacritty.toml" "${HOME}/.config/alacritty/alacritty.toml"
+    fi
+
     record_summary "Dotfiles" "Core dotfiles deployed from repository"
 }
 
