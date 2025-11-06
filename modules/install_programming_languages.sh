@@ -39,11 +39,38 @@ install_rust() {
 
 install_node() {
     install_packages fnm
+    local summary="Node.js (fnm managed)"
     if command -v fnm >/dev/null 2>&1; then
-        fnm install --lts
-        fnm use --lts
+        # Ensure the current shell knows about fnm-managed shims
+        eval "$(fnm env --shell bash)"
+
+        local lts_ref="lts-latest"
+        local fallback_ref="latest"
+        local installed_ref=""
+
+        if fnm install "${lts_ref}" >/dev/null 2>&1; then
+            installed_ref="${lts_ref}"
+            log_info "[fnm] Installed Node.js ${lts_ref}"
+        else
+            log_warn "fnm could not use ${lts_ref}; attempting ${fallback_ref}."
+            if fnm install "${fallback_ref}" >/dev/null 2>&1; then
+                installed_ref="${fallback_ref}"
+                log_info "[fnm] Installed Node.js ${fallback_ref}"
+            else
+                log_error "fnm failed to install Node.js (${lts_ref} or ${fallback_ref})."
+            fi
+        fi
+
+        if [[ -n "${installed_ref}" ]]; then
+            if ! fnm default "${installed_ref}" >/dev/null 2>&1; then
+                log_warn "fnm could not set default Node.js version (${installed_ref}); please set manually."
+            fi
+            summary="Node.js via fnm (${installed_ref})"
+        else
+            summary="Node.js via fnm (install failed)"
+        fi
     fi
-    record_summary "Languages" "Node.js (fnm managed)"
+    record_summary "Languages" "${summary}"
 }
 
 install_ruby() {
