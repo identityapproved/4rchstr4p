@@ -20,10 +20,22 @@ CTF_MODULES=(
 )
 
 run_ctf_suite() {
+    local -a module_keys=(
+        install_ctf_reversing.sh
+        install_ctf_web.sh
+        install_ctf_osint.sh
+        install_ctf_pwn.sh
+        install_ctf_crypto_forensics.sh
+    )
     mapfile -t picks < <(prompt_choices \
         "Select CTF tool categories to install:" \
-        "install_ctf_reversing.sh install_ctf_web.sh install_ctf_pwn.sh" \
+        "all" \
+        "all:Install every CTF module" \
         "${CTF_MODULES[@]}")
+
+    if [[ " ${picks[*]} " == *" all "* ]]; then
+        picks=("${module_keys[@]}")
+    fi
 
     for module in "${picks[@]}"; do
         run_module "${MODULE_ROOT}/${module}"

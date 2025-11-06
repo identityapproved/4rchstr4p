@@ -10,14 +10,20 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 install_reversing() {
+    local -a available_keys=(ghidra radare cutter binaryninja frida)
     mapfile -t selections < <(prompt_choices \
         "Choose reversing tools:" \
-        "ghidra radare cutter" \
+        "all" \
+        "all:Install every reversing tool" \
         "ghidra:Ghidra (AUR download)" \
         "radare:radare2 suite" \
         "cutter:Cutter GUI" \
         "binaryninja:Binary Ninja (manual install)" \
         "frida:Frida tools")
+
+    if [[ " ${selections[*]} " == *" all "* ]]; then
+        selections=("${available_keys[@]}")
+    fi
 
     for item in "${selections[@]}"; do
         case "${item}" in

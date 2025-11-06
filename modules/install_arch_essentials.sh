@@ -11,9 +11,11 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 install_arch_packages() {
+    local -a available_keys=(update base-devel network virtualbox utils containers fonts)
     mapfile -t essentials < <(prompt_choices \
         "Select base packages to install:" \
-        "update base-devel network utils virtualbox" \
+        "all" \
+        "all:Install every base option" \
         "update:System update & keyring refresh" \
         "base-devel:base-devel toolchain" \
         "network:Networking utilities (net-tools, inetutils, traceroute)" \
@@ -21,6 +23,10 @@ install_arch_packages() {
         "utils:System utilities (htop, lsof, p7zip, unzip, zip)" \
         "containers:Podman stack" \
         "fonts:Base fonts (ttf-dejavu, liberation)" )
+
+    if [[ " ${essentials[*]} " == *" all "* ]]; then
+        essentials=("${available_keys[@]}")
+    fi
 
     for choice in "${essentials[@]}"; do
         case "${choice}" in

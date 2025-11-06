@@ -30,13 +30,19 @@ install_misc() {
 }
 
 run_optional_extras() {
+    local -a available_keys=(posh starship terminal misc)
     mapfile -t selections < <(prompt_choices \
         "Choose optional extras to install:" \
-        "" \
+        "all" \
+        "all:Install every optional extra" \
         "posh:oh-my-posh prompt" \
         "starship:Starship prompt" \
         "terminal:Alacritty terminal emulator" \
         "misc:Misc extras (neofetch, yq)")
+
+    if [[ " ${selections[*]} " == *" all "* ]]; then
+        selections=("${available_keys[@]}")
+    fi
 
     for item in "${selections[@]}"; do
         case "${item}" in

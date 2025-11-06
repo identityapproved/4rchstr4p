@@ -10,13 +10,19 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 install_osint_tools() {
+    local -a available_keys=(maltego spiderfoot sherlock holehe)
     mapfile -t selections < <(prompt_choices \
         "Choose OSINT tools:" \
-        "spiderfoot sherlock holehe" \
+        "all" \
+        "all:Install every OSINT tool" \
         "maltego:Maltego (AUR)" \
         "spiderfoot:SpiderFoot" \
         "sherlock:sherlock username hunter" \
         "holehe:holehe (email reuse)")
+
+    if [[ " ${selections[*]} " == *" all "* ]]; then
+        selections=("${available_keys[@]}")
+    fi
 
     for item in "${selections[@]}"; do
         case "${item}" in

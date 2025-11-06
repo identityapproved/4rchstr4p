@@ -10,9 +10,11 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 install_crypto_forensics() {
+    local -a available_keys=(hashcat john cyberchef binwalk volatility stegsolve sleuthkit ghidra)
     mapfile -t selections < <(prompt_choices \
         "Choose crypto/forensics tools:" \
-        "hashcat cyberchef binwalk volatility stegsolve" \
+        "all" \
+        "all:Install every crypto/forensics tool" \
         "hashcat:Hashcat + OpenCL" \
         "john:John the Ripper jumbo" \
         "cyberchef:CyberChef (AUR)" \
@@ -21,6 +23,10 @@ install_crypto_forensics() {
         "stegsolve:Stegsolve (AUR)" \
         "sleuthkit:Sleuth Kit & Autopsy" \
         "ghidra:Install Ghidra if missing")
+
+    if [[ " ${selections[*]} " == *" all "* ]]; then
+        selections=("${available_keys[@]}")
+    fi
 
     for item in "${selections[@]}"; do
         case "${item}" in

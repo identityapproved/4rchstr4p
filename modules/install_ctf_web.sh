@@ -10,9 +10,11 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 install_web_tools() {
+    local -a available_keys=(burp zap dirsearch gobuster wfuzz sqlmap ffuf)
     mapfile -t selections < <(prompt_choices \
         "Choose web exploitation tools:" \
-        "burp zap dirsearch gobuster wfuzz sqlmap" \
+        "all" \
+        "all:Install every web exploitation tool" \
         "burp:Burp Suite Community (AUR)" \
         "zap:OWASP ZAP" \
         "dirsearch:dirsearch" \
@@ -20,6 +22,10 @@ install_web_tools() {
         "wfuzz:wfuzz" \
         "sqlmap:sqlmap" \
         "ffuf:ffuf (AUR)")
+
+    if [[ " ${selections[*]} " == *" all "* ]]; then
+        selections=("${available_keys[@]}")
+    fi
 
     for item in "${selections[@]}"; do
         case "${item}" in

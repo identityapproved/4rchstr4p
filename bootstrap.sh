@@ -79,7 +79,9 @@ main() {
 
     log_section "Arch Linux CTF bootstrap started"
 
+    local -a category_keys=("arch" "languages" "shell" "ctf" "extras")
     local -a category_options=(
+        "all:Run every category (arch, languages, shell, ctf, extras)"
         "arch:Arch Linux essentials (helpers, system tuning, virtualization)"
         "languages:Programming languages and runtimes"
         "shell:Shell & terminal tooling"
@@ -90,7 +92,7 @@ main() {
     while true; do
         mapfile -t top_choices < <(prompt_choices \
             "Select the categories you want to configure (0 or q to quit):" \
-            "arch languages shell ctf" \
+            "all" \
             "${category_options[@]}")
 
         if (( PROMPT_CHOICES_EXIT_REQUESTED )); then
@@ -101,6 +103,10 @@ main() {
         if [[ "${#top_choices[@]}" -eq 0 ]]; then
             log_warn "No categories selected; returning to menu."
             continue
+        fi
+
+        if [[ " ${top_choices[*]} " == *" all "* ]]; then
+            top_choices=("${category_keys[@]}")
         fi
 
         for choice in "${top_choices[@]}"; do

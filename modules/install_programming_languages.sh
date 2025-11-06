@@ -89,9 +89,11 @@ install_java() {
 }
 
 install_languages() {
+    local -a available_keys=(python go rust node ruby perl java)
     mapfile -t langs < <(prompt_choices \
         "Select languages/runtimes to install:" \
-        "python go rust node" \
+        "all" \
+        "all:Install every listed language/runtime" \
         "python:Python + pipx" \
         "go:Go toolchain" \
         "rust:Rust via rustup" \
@@ -99,6 +101,10 @@ install_languages() {
         "ruby:Ruby & bundler" \
         "perl:Perl" \
         "java:OpenJDK")
+
+    if [[ " ${langs[*]} " == *" all "* ]]; then
+        langs=("${available_keys[@]}")
+    fi
 
     for lang in "${langs[@]}"; do
         case "${lang}" in

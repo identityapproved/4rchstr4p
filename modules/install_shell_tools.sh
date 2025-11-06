@@ -145,9 +145,11 @@ setup_lazyvim() {
 }
 
 run_shell_tools() {
+    local -a available_keys=(zsh fish editor fzf tmux misc fonts dotfiles zsh_plugins)
     mapfile -t selections < <(prompt_choices \
         "Choose shell tooling to install/configure:" \
-        "zsh editor fzf tmux misc fonts dotfiles zsh_plugins" \
+        "all" \
+        "all:Install every shell tooling option" \
         "zsh:Install Zsh" \
         "fish:Install Fish shell" \
         "editor:Configure editor (Vim/Neovim)" \
@@ -157,6 +159,10 @@ run_shell_tools() {
         "fonts:Nerd fonts selection" \
         "dotfiles:Deploy repository dotfiles" \
         "zsh_plugins:Install Oh My Zsh custom plugins")
+
+    if [[ " ${selections[*]} " == *" all "* ]]; then
+        selections=("${available_keys[@]}")
+    fi
 
     for item in "${selections[@]}"; do
         case "${item}" in
