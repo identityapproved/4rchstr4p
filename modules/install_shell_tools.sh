@@ -27,20 +27,28 @@ install_tmux() {
 }
 
 install_misc_cli() {
-    install_packages bat exa tree ripgrep fd dust procs jq
-    record_summary "CLI" "bat, exa, tree, ripgrep, fd, dust, procs, jq"
+    install_packages bat exa tree ripgrep fd dust procs jq zoxide
+    record_summary "CLI" "bat, exa, tree, ripgrep, fd, dust, procs, jq, zoxide"
 }
 
 install_fonts() {
     mapfile -t fonts < <(prompt_choices \
         "Select nerd fonts to install:" \
-        "iosevka firacode" \
+        "nerd firacode jetbrains" \
+        "nerd:nerd-fonts meta package" \
+        "firacode:ttf-fira-code" \
+        "jetbrains:ttf-jetbrains-mono" \
         "iosevka:ttf-iosevka-nerd (AUR)" \
-        "firacode:nerd-fonts-fira-code" \
-        "jetbrains:nerd-fonts-jetbrains-mono" \
         "powerline:powerline-fonts")
     for font in "${fonts[@]}"; do
         case "${font}" in
+            nerd)
+                if install_packages nerd-fonts; then
+                    record_summary "Fonts" "Nerd Fonts collection"
+                else
+                    log_warn "Failed to install Nerd Fonts meta package."
+                fi
+                ;;
             iosevka)
                 if install_packages ttf-iosevka-nerd; then
                     record_summary "Fonts" "Iosevka Nerd"
@@ -49,17 +57,17 @@ install_fonts() {
                 fi
                 ;;
             firacode)
-                if install_packages nerd-fonts-fira-code; then
-                    record_summary "Fonts" "FiraCode Nerd"
+                if install_packages ttf-fira-code; then
+                    record_summary "Fonts" "FiraCode"
                 else
-                    log_warn "Failed to install FiraCode Nerd font."
+                    log_warn "Failed to install FiraCode font."
                 fi
                 ;;
             jetbrains)
-                if install_packages nerd-fonts-jetbrains-mono; then
-                    record_summary "Fonts" "JetBrainsMono Nerd"
+                if install_packages ttf-jetbrains-mono; then
+                    record_summary "Fonts" "JetBrains Mono"
                 else
-                    log_warn "Failed to install JetBrainsMono Nerd font."
+                    log_warn "Failed to install JetBrains Mono font."
                 fi
                 ;;
             powerline)
@@ -92,8 +100,24 @@ install_fnm_runtime() {
     fi
 
     if command -v fnm >/dev/null 2>&1; then
-        fnm install --lts >/dev/null 2>&1 || true
-        fnm use --install-if-missing --lts >/dev/null 2>&1 || true
+        eval "$(fnm env --shell bash)"
+        local lts_ref="lts-latest"
+        local fallback_ref="latest"
+        local chosen=""
+
+        if fnm install "${lts_ref}" >/dev/null 2>&1; then
+            chosen="${lts_ref}"
+            log_info "[fnm] Installed Node.js ${lts_ref}"
+        elif fnm install "${fallback_ref}" >/dev/null 2>&1; then
+            chosen="${fallback_ref}"
+            log_warn "fnm fell back to ${fallback_ref}."
+        else
+            log_warn "fnm failed to install Node.js runtime; LazyVim node tooling may be unavailable."
+        fi
+
+        if [[ -n "${chosen}" ]]; then
+            fnm default "${chosen}" >/dev/null 2>&1 || log_warn "Unable to set fnm default to ${chosen}."
+        fi
     fi
 }
 
