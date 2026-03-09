@@ -41,3 +41,8 @@ pipx_venvs/
 *.tar
 *.tar.gz
 *.zip
+
+# Codex repo-router artifacts
+AGENTS.md
+agents/
+.githooks/

@@ -11,7 +11,7 @@ source "${SCRIPT_DIR}/../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
-backup_file() {
+backup_path() {
     local target="$1"
     if [[ -e "${target}" && ! -L "${target}" ]]; then
         local timestamp
@@ -27,8 +27,18 @@ deploy_file() {
     local dest="$2"
     local mode="${3:-644}"
 
-    backup_file "${dest}"
+    backup_path "${dest}"
     install -Dm"${mode}" "${src}" "${dest}"
+    log_info "Deployed $(basename "${src}") to ${dest}"
+}
+
+deploy_dir() {
+    local src="$1"
+    local dest="$2"
+
+    backup_path "${dest}"
+    mkdir -p "${dest}"
+    cp -a "${src}/." "${dest}/"
     log_info "Deployed $(basename "${src}") to ${dest}"
 }
 
@@ -40,6 +50,9 @@ install_dotfiles() {
 
     deploy_file "${DOTFILES_DIR}/zsh/.zshrc" "${HOME}/.zshrc"
     deploy_file "${DOTFILES_DIR}/zsh/.aliases" "${HOME}/.aliases"
+    if [[ -f "${DOTFILES_DIR}/zsh/.ctf.aliases" ]]; then
+        deploy_file "${DOTFILES_DIR}/zsh/.ctf.aliases" "${HOME}/.ctf.aliases"
+    fi
 
     if [[ -f "${DOTFILES_DIR}/vim/.vimrc" ]]; then
         deploy_file "${DOTFILES_DIR}/vim/.vimrc" "${HOME}/.vimrc"
@@ -53,7 +66,67 @@ install_dotfiles() {
         deploy_file "${DOTFILES_DIR}/alacritty/alacritty.toml" "${HOME}/.config/alacritty/alacritty.toml"
     fi
 
-    record_summary "Dotfiles" "Core dotfiles deployed from repository"
+    if [[ -f "${DOTFILES_DIR}/wayland/sway/config" ]]; then
+        deploy_file "${DOTFILES_DIR}/wayland/sway/config" "${HOME}/.config/sway/config"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/waybar" ]]; then
+        deploy_dir "${DOTFILES_DIR}/rose-pine/waybar" "${HOME}/.config/waybar"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/wofi" ]]; then
+        deploy_dir "${DOTFILES_DIR}/rose-pine/wofi" "${HOME}/.config/wofi"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/swaync" ]]; then
+        deploy_dir "${DOTFILES_DIR}/rose-pine/swaync" "${HOME}/.config/swaync"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/foot" ]]; then
+        deploy_dir "${DOTFILES_DIR}/rose-pine/foot" "${HOME}/.config/foot"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/lsd" ]]; then
+        deploy_dir "${DOTFILES_DIR}/rose-pine/lsd" "${HOME}/.config/lsd"
+    fi
+
+    if [[ -f "${DOTFILES_DIR}/rose-pine/yazi/theme.toml" ]]; then
+        deploy_file "${DOTFILES_DIR}/rose-pine/yazi/theme.toml" "${HOME}/.config/yazi/theme.toml"
+    fi
+
+    if [[ -f "${DOTFILES_DIR}/rose-pine/fzf/rose-pine.sh" ]]; then
+        deploy_file "${DOTFILES_DIR}/rose-pine/fzf/rose-pine.sh" "${HOME}/.config/fzf/rose-pine.sh"
+    fi
+
+    if [[ -f "${DOTFILES_DIR}/rose-pine/wallpaper-cycle.sh" ]]; then
+        deploy_file "${DOTFILES_DIR}/rose-pine/wallpaper-cycle.sh" "${HOME}/.local/bin/wallpaper-cycle" "755"
+    fi
+
+    if [[ -f "${DOTFILES_DIR}/wayland/bin/dbus-sway-environment" ]]; then
+        deploy_file "${DOTFILES_DIR}/wayland/bin/dbus-sway-environment" "${HOME}/.local/bin/dbus-sway-environment" "755"
+    fi
+
+    if [[ -f "${DOTFILES_DIR}/wayland/bin/configure-gtk" ]]; then
+        deploy_file "${DOTFILES_DIR}/wayland/bin/configure-gtk" "${HOME}/.local/bin/configure-gtk" "755"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/wallpapers" ]]; then
+        deploy_dir "${DOTFILES_DIR}/rose-pine/wallpapers" "${HOME}/.local/share/wallpapers/rose-pine"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/startpage" ]]; then
+        deploy_dir "${DOTFILES_DIR}/rose-pine/startpage" "${HOME}/.local/share/startpage"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/rose-pine/zsh/themes" ]]; then
+        if [[ -d "${HOME}/.oh-my-zsh/custom" ]]; then
+            deploy_dir "${DOTFILES_DIR}/rose-pine/zsh/themes" "${HOME}/.oh-my-zsh/custom/themes"
+        else
+            deploy_dir "${DOTFILES_DIR}/rose-pine/zsh/themes" "${HOME}/.config/zsh/themes"
+        fi
+    fi
+
+    record_summary "Dotfiles" "Dotfiles deployed from repository"
 }
 
 install_dotfiles

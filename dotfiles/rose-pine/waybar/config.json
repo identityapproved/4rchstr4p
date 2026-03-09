@@ -1,0 +1,19 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 28,
+  "modules-left": ["sway/workspaces", "sway/mode"],
+  "modules-center": ["clock"],
+  "modules-right": ["pulseaudio", "network", "battery", "tray"],
+  "sway/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": true
+  },
+  "clock": {
+    "interval": 60,
+    "format": "{:%a %d/%m %H:%M}"
+  },
+  "battery": {
+    "tooltip": false
+  }
+}

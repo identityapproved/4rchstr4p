@@ -79,12 +79,13 @@ main() {
 
     log_section "Arch Linux CTF bootstrap started"
 
-    local -a category_keys=("arch" "languages" "shell" "ctf" "extras")
+    local -a category_keys=("arch" "languages" "shell" "wayland" "ctf" "extras")
     local -a category_options=(
-        "all:Run every category (arch, languages, shell, ctf, extras)"
+        "all:Run every category (arch, languages, shell, wayland, ctf, extras)"
         "arch:Arch Linux essentials (helpers, system tuning, virtualization)"
         "languages:Programming languages and runtimes"
         "shell:Shell & terminal tooling"
+        "wayland:Wayland + Sway desktop environment"
         "ctf:CTF tooling suite (choose sub-categories inside)"
         "extras:Optional extras & polish"
     )
@@ -119,6 +120,9 @@ main() {
                     ;;
                 shell)
                     run_module "${MODULE_DIR}/install_shell_tools.sh"
+                    ;;
+                wayland)
+                    run_module "${MODULE_DIR}/install_wayland_sway.sh"
                     ;;
                 ctf)
                     run_module "${MODULE_DIR}/install_ctf_suite.sh"

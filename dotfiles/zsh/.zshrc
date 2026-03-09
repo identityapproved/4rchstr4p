@@ -1,104 +1,71 @@
-if command -v tmux &> /dev/null && [ -z "$TMUX" ]; then
-    tmux attach -t default || tmux new -s default
+# Ask whether to start tmux if not already inside one
+if [ -z "$TMUX" ]; then
+  read -q "REPLY?Start tmux session? [y/N]: "
+  echo ""
+  if [[ "$REPLY" =~ ^[Yy]$ ]]; then
+    tmux attach || exec tmux new-session
+    exit
+  fi
 fi
 
-ZSH_THEME="random"
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-# [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# Path setup
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+export ZSH="$HOME/.oh-my-zsh"
+export ZSH_CUSTOM="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}"
+export EDITOR="nvim"
 
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-# if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-#   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-# fi
+ZSH_THEME="rose-pine"
+plugins=(
+  git
+  fzf
+  tmux
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+  zsh-vi-mode
+  alias-tips
+  cd-ls
+  zsh-git-fzf
+  fzf-alias
+  aliases
+  command-not-found
+  copyfile
+  copypath
+  cp
+  extract
+  fancy-ctrl-z
+  history
+  last-working-dir
+  nmap
+  per-directory-history
+  perms
+  python
+  rsync
+  safe-paste
+  sudo
+  tldr
+  urltools
+  web-search
+  zsh-interactive-cd
+  zsh-navigation-tools
+)
 
-# Path to your oh-my-zsh installation.
-export PATH="$HOME/.local/bin:$PATH"
-export ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+source "$ZSH/oh-my-zsh.sh"
+if command -v fzf >/dev/null 2>&1 && fzf --zsh >/dev/null 2>&1; then
+  source <(fzf --zsh)
+fi
 
-zstyle ':omz:update' mode auto      # update automatically without asking
+[[ -f "${HOME}/.aliases" ]] && source "${HOME}/.aliases"
+[[ -f "${HOME}/.ctf.aliases" ]] && source "${HOME}/.ctf.aliases"
 
-# Uncomment the following line if pasting URLs and other text is messed up.
-DISABLE_MAGIC_FUNCTIONS="true"
+if [[ -f "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/rose-pine.sh" ]]; then
+  source "${XDG_CONFIG_HOME:-$HOME/.config}/fzf/rose-pine.sh"
+fi
 
-# Uncomment the following line to enable command auto-correction.
-ENABLE_CORRECTION="true"
+for f in /usr/share/fzf/key-bindings.zsh /usr/share/fzf/completion.zsh "$HOME/.fzf-extras/fzf-extras.zsh"; do
+  [[ -e $f ]] && source $f
+done
 
-# Uncomment the following line to display red dots whilst waiting for completion.
-COMPLETION_WAITING_DOTS="true"
-
-# Which plugins would you like to load?
-# Plugins
-# https://github.com/zshzoo/cd-ls
-# https://github.com/alexiszamanidis/zsh-git-fzf
-# https://github.com/jeffreytse/zsh-vi-mode
-# https://github.com/djui/alias-tips
-# https://github.com/thirteen37/fzf-alias
-# https://github.com/zsh-users/zsh-history-substring-search
-# https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md
-# https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.m
-
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-[[ -z "${plugins[*]}" ]] && plugins=(git fzf extract gitignore pip python docker docker-compose zsh-vi-mode cd-ls zsh-git-fzf alias-tips ufw themes fzf-alias zsh-history-substring-search zsh-syntax-highlighting zsh-autosuggestions archlinux zsh-aur-install)
-
-source $ZSH/oh-my-zsh.sh
-source $HOME/.aliases
-
-# User configuration
-
-# HIST_STAMPS="dd.mm.yyyy"
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Ignore commands that start with spaces and duplicates.
-
-export HISTCONTROL=ignoreboth
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Don't add certain commands to the history file.
-
-export HISTIGNORE="&:[bf]g:c:clear:history:exit:q:pwd:* --help"
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Use custom `less` colors for `man` pages.
-
-export LESS_TERMCAP_md="$(tput bold 2> /dev/null; tput setaf 2 2> /dev/null)"
-export LESS_TERMCAP_me="$(tput sgr0 2> /dev/null)"
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# Make new shells get the history lines from all previous
-# shells instead of the default "last window closed" history.
-
-export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-# [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-eval "$(zoxide init --cmd cd zsh)"
-
-# FZF
-export FZF_BASE=/usr/share/fzf
-export FZF_DEFAULT_OPTS='--reverse --preview="bat {}" --info=inline --color=fg:#f8f8f2,bg:-1,hl:#bd93f9 --color=fg+:#f8f8f2,bg+:-1,gutter:-1,hl+:#bd93f9 --color=info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6 --color=marker:#ff79c6,spinner:#ffb86c,header:#6272a4'
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-# Loads FZF keybindings, replacing native reverse search etc with FZF
-[[ -e "/usr/share/fzf/key-bindings.zsh" ]] \
-  && source "/usr/share/fzf/key-bindings.zsh"
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# bat 
-
-# bat can be used as a colorizing pager for man, by setting the MANPAGER environment variable:
-export MANPAGER="sh -c 'awk '\''{ gsub(/\x1B\[[0-9;]*m/, \"\", \$0); gsub(/.\x08/, \"\", \$0); print }'\'' | bat -p -lman'"
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# node fnm 
-eval "$(fnm env --use-on-cd --shell zsh)"
+export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+if command -v zoxide >/dev/null 2>&1; then
+  eval "$(zoxide init --cmd cd zsh)"
+fi

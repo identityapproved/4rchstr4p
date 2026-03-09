@@ -10,6 +10,7 @@ These scripts automate bootstrapping an Arch Linux system for CTF competitions a
   - `install_arch_essentials.sh`
   - `install_programming_languages.sh`
   - `install_shell_tools.sh`
+  - `install_wayland_sway.sh`
   - `install_ctf_suite.sh` (dispatches to submodules)
   - `install_optional_extras.sh`
   - `install_dotfiles.sh`
