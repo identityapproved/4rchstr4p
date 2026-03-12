@@ -36,6 +36,8 @@ All Wayland/dwl desktop packages are installed by `modules/desktop/install_wayla
 - `dwl`
 - `foot`
 - `wayland`, `wayland-protocols`, `wlroots`
+- `libinput`, `libxkbcommon`, `pkgconf`
+- `libxcb`, `xcb-util-wm`
 - `seatd`
 - `mesa`, `vulkan-swrast`
 - `xorg-xwayland`

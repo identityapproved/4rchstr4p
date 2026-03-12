@@ -20,7 +20,7 @@ install_arch_packages() {
         "base-devel:base-devel toolchain" \
         "network:Networking utilities (net-tools, inetutils, traceroute)" \
         "virtualbox:Virtualization support (VirtualBox detection)" \
-        "utils:System utilities (htop, lsof, p7zip, unzip, zip)" \
+        "utils:System utilities (htop, lsof, 7zip, unzip, zip)" \
         "containers:Podman stack" \
         "fonts:Base fonts (ttf-dejavu, liberation)" )
 
@@ -97,7 +97,7 @@ install_arch_packages() {
                 fi
                 ;;
             utils)
-                install_packages htop lsof p7zip unzip zip tree wget curl bind ripgrep rsync
+                install_packages htop lsof 7zip unzip zip tree wget curl bind ripgrep rsync
                 record_summary "Packages" "System utilities"
                 ;;
             containers)

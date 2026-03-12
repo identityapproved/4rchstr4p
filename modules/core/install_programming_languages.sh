@@ -88,8 +88,28 @@ install_java() {
     record_summary "Languages" "OpenJDK"
 }
 
+install_nim() {
+    install_packages nim
+    record_summary "Languages" "Nim"
+}
+
+install_zig() {
+    install_packages zig
+    record_summary "Languages" "Zig"
+}
+
+install_odin() {
+    install_packages odin
+    record_summary "Languages" "Odin"
+}
+
+install_c() {
+    install_packages gcc gdb make
+    record_summary "Languages" "C (gcc toolchain)"
+}
+
 install_languages() {
-    local -a available_keys=(python go rust node ruby perl java)
+    local -a available_keys=(python go rust node ruby perl java nim zig odin c)
     mapfile -t langs < <(prompt_choices \
         "Select languages/runtimes to install:" \
         "all" \
@@ -100,7 +120,11 @@ install_languages() {
         "node:Node.js via fnm" \
         "ruby:Ruby & bundler" \
         "perl:Perl" \
-        "java:OpenJDK")
+        "java:OpenJDK" \
+        "nim:Nim" \
+        "zig:Zig" \
+        "odin:Odin" \
+        "c:C (gcc toolchain)")
 
     if (( PROMPT_CHOICES_EXIT_REQUESTED )) || [[ "${#langs[@]}" -eq 0 ]]; then
         log_info "Skipping languages module."
@@ -120,6 +144,10 @@ install_languages() {
             ruby) install_ruby ;;
             perl) install_perl ;;
             java) install_java ;;
+            nim) install_nim ;;
+            zig) install_zig ;;
+            odin) install_odin ;;
+            c) install_c ;;
         esac
     done
 }

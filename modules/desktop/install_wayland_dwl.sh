@@ -10,6 +10,17 @@ source "${SCRIPT_DIR}/../../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
+pick_first_available_package() {
+    local pkg
+    for pkg in "$@"; do
+        if package_available "${pkg}"; then
+            printf "%s\n" "${pkg}"
+            return 0
+        fi
+    done
+    return 1
+}
+
 install_available_packages() {
     local label="$1"; shift
     local -a pkgs=("$@")
@@ -33,11 +44,21 @@ install_available_packages() {
 }
 
 install_core() {
-    install_available_packages "core" \
-        dwl foot wayland wayland-protocols wlroots \
-        seatd mesa vulkan-swrast xorg-xwayland \
-        wofi wl-clipboard swaybg xdg-user-dirs \
+    local wlroots_pkg=""
+    local -a core_pkgs=(
+        dwl foot wayland wayland-protocols
+        libinput libxkbcommon pkgconf libxcb xcb-util-wm
+        seatd mesa vulkan-swrast xorg-xwayland
+        wofi wl-clipboard swaybg xdg-user-dirs
         xdg-utils xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk
+    )
+    if wlroots_pkg="$(pick_first_available_package wlroots wlroots0.18 wlroots0.17)"; then
+        core_pkgs+=("${wlroots_pkg}")
+    else
+        log_warn "No wlroots package variant found (tried: wlroots, wlroots0.18, wlroots0.17)."
+    fi
+
+    install_available_packages "core" "${core_pkgs[@]}"
 
     if command -v systemctl >/dev/null 2>&1; then
         ensure_sudo
@@ -86,13 +107,22 @@ install_media() {
 }
 
 install_tools() {
-    install_available_packages "tools" \
-        grim slurp yazi ffmpegthumbnailer unar poppler p7zip ueberzugpp brightnessctl
+    local archive_pkg=""
+    local sevenzip_pkg=""
+    local -a tool_pkgs=(
+        grim slurp yazi ffmpegthumbnailer poppler ueberzugpp brightnessctl
+    )
+    archive_pkg="$(pick_first_available_package unrar unar unarchiver || true)"
+    sevenzip_pkg="$(pick_first_available_package 7zip p7zip || true)"
+    [[ -n "${archive_pkg}" ]] && tool_pkgs+=("${archive_pkg}")
+    [[ -n "${sevenzip_pkg}" ]] && tool_pkgs+=("${sevenzip_pkg}")
+
+    install_available_packages "tools" "${tool_pkgs[@]}"
 }
 
 install_apps() {
     install_available_packages "apps" \
-        brave firefox chromium vscodium
+        chromium vivaldi vscodium
 }
 
 install_theming() {
