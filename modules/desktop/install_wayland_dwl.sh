@@ -62,7 +62,7 @@ install_core() {
 
     if command -v systemctl >/dev/null 2>&1; then
         ensure_sudo
-        sudo systemctl enable seatd.service || log_warn "Could not enable seatd.service automatically."
+        sudo systemctl enable --now seatd.service || log_warn "Could not enable/start seatd.service automatically."
     fi
 
     if id -nG "${USER}" | tr ' ' '\n' | grep -qx "seat"; then
@@ -87,12 +87,16 @@ LAUNCH
         record_summary "Shell" "Created ~/.bashrc"
     fi
 
-    if ! grep -Fq 'exec WLR_NO_HARDWARE_CURSORS=1 dbus-run-session dwl' "${bashrc}"; then
+    if ! grep -Fq 'dbus-run-session dwl' "${bashrc}"; then
         cat >> "${bashrc}" <<'BASHRC_BLOCK'
 
 # Auto-start dwl on first TTY.
 if [ -z "$WAYLAND_DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-    exec WLR_NO_HARDWARE_CURSORS=1 dbus-run-session dwl
+    if command -v dwl >/dev/null 2>&1 && command -v dbus-run-session >/dev/null 2>&1; then
+        WLR_NO_HARDWARE_CURSORS=1 dbus-run-session dwl || echo "dwl exited; staying in shell for troubleshooting."
+    else
+        echo "dwl or dbus-run-session is missing; skipping autostart."
+    fi
 fi
 BASHRC_BLOCK
         record_summary "dwl" "Appended dwl autostart block to ~/.bashrc"

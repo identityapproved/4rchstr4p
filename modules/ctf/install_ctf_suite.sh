@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# install_ctf_suite.sh - CTF tooling dispatcher.
+# install_ctf_suite.sh - Web pentest + hashcracking tooling dispatcher.
 
 set -euo pipefail
 
@@ -12,27 +12,23 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 CTF_MODULES=(
-    "install_ctf_reversing.sh:Reversing tools (Ghidra, Cutter, radare2...)"
-    "install_ctf_web.sh:Web exploitation (Burp, ZAP, dirsearch...)"
-    "install_ctf_pwn.sh:Pwn (Pwntools, ROP, GDB helpers, QEMU)"
-    "install_ctf_crypto_forensics.sh:Crypto & Forensics (CyberChef, binwalk, volatility)"
+    "install_ctf_web.sh:Web exploitation & pentesting tools"
+    "install_ctf_hashcracking.sh:Hash cracking tools (hashcat, john, hcxtools)"
 )
 
 run_ctf_suite() {
     local -a module_keys=(
-        install_ctf_reversing.sh
         install_ctf_web.sh
-        install_ctf_pwn.sh
-        install_ctf_crypto_forensics.sh
+        install_ctf_hashcracking.sh
     )
     mapfile -t picks < <(prompt_choices \
-        "Select CTF tool categories to install:" \
+        "Select web pentest/hashcracking categories to install:" \
         "all" \
-        "all:Install every CTF module" \
+        "all:Install every web pentest/hashcracking module" \
         "${CTF_MODULES[@]}")
 
     if (( PROMPT_CHOICES_EXIT_REQUESTED )) || [[ "${#picks[@]}" -eq 0 ]]; then
-        log_info "Skipping CTF suite module."
+        log_info "Skipping web pentest/hashcracking module."
         return
     fi
 

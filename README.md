@@ -1,6 +1,7 @@
-# Arch Linux CTF Bootstrap Scripts
+# Arch Linux Web Pentest Bootstrap Scripts
 
-These scripts bootstrap an Arch Linux system for CTF/pentesting with modular, repeatable installers.
+These scripts bootstrap an Arch Linux system for web pentesting/bug bounty workflows with modular, repeatable installers.
+<u>Current focus: web hacking, web pentesting, bug bounty, and hash cracking only.</u>
 
 The desktop flow is now focused on **Wayland + dwl** via `modules/desktop/install_wayland_dwl.sh`.
 
@@ -10,7 +11,10 @@ The desktop flow is now focused on **Wayland + dwl** via `modules/desktop/instal
 - `lib/common.sh` - shared helpers for logging, prompts, package operations, and summaries.
 - `modules/core/` - base system, shell, language, extras, and dotfiles modules.
 - `modules/desktop/install_wayland_dwl.sh` - dwl/Wayland desktop module with TTY autostart and VirtualBox helpers.
-- `modules/ctf/` - CTF suite and category-specific installers.
+- `modules/ctf/` - focused security modules:
+  - `install_ctf_web.sh`
+  - `install_ctf_hashcracking.sh`
+  - `install_ctf_suite.sh` (dispatcher)
 - `docs/virtualization/virtualbox-dwl.md` - older virtualization notes.
 
 Logs are written to `logs/bootstrap_<timestamp>.log` and `logs/summary_<timestamp>.txt`.

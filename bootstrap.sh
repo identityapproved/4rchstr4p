@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap.sh - Arch Linux CTF environment orchestrator.
+# bootstrap.sh - Arch Linux web pentest environment orchestrator.
 
 set -euo pipefail
 
@@ -77,7 +77,7 @@ main() {
     ensure_package_manager
     prompt_terminal_emulators
 
-    log_section "Arch Linux CTF bootstrap started"
+    log_section "Arch Linux web pentest bootstrap started"
 
     local -a category_keys=("arch" "languages" "shell" "wayland" "ctf" "extras")
     local -a category_options=(
@@ -86,7 +86,7 @@ main() {
         "languages:Programming languages and runtimes"
         "shell:Shell & terminal tooling"
         "wayland:Wayland + dwl desktop environment"
-        "ctf:CTF tooling suite (choose sub-categories inside)"
+        "ctf:Web pentest + hashcracking tools"
         "extras:Optional extras & polish"
     )
 
