@@ -110,7 +110,7 @@ install_tools() {
     local archive_pkg=""
     local sevenzip_pkg=""
     local -a tool_pkgs=(
-        grim slurp yazi ffmpegthumbnailer poppler ueberzugpp brightnessctl
+        yazi ffmpegthumbnailer poppler ueberzugpp brightnessctl
     )
     archive_pkg="$(pick_first_available_package unrar unar unarchiver || true)"
     sevenzip_pkg="$(pick_first_available_package 7zip p7zip || true)"
@@ -122,7 +122,7 @@ install_tools() {
 
 install_apps() {
     install_available_packages "apps" \
-        chromium vivaldi vscodium
+        chromium vivaldi
 }
 
 install_theming() {
@@ -160,8 +160,8 @@ run_wayland_dwl() {
         "all:Install every Wayland/dwl component" \
         "core:dwl + Wayland stack for Archinstall minimal desktop" \
         "media:PipeWire, PulseAudio compatibility, and controls" \
-        "tools:grim/slurp and desktop helper tools" \
-        "apps:Browsers + VSCodium" \
+        "tools:Desktop helper tools (no screenshot stack)" \
+        "apps:Browsers (Chromium + Vivaldi)" \
         "theming:Rose Pine GTK/icon themes" \
         "dotfiles:Deploy desktop dotfiles")
 

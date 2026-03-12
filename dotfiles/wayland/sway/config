@@ -55,7 +55,6 @@ exec_always $HOME/.local/bin/wallpaper-cycle
     bindsym $mod+e exec $term -e yazi
 
     # Screenshots
-    bindsym $mod+a exec grim  -g "$(slurp)" "$HOME/Pictures/Screenshots/Screenshot-$(date +'%H:%M:%S.png')"
 
 
 # Moving around:
