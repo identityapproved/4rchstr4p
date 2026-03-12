@@ -4,9 +4,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="${SCRIPT_DIR}/.."
-# shellcheck source=../lib/common.sh
-source "${SCRIPT_DIR}/../lib/common.sh"
+ROOT_DIR="${SCRIPT_DIR}/../.."
+# shellcheck source=../../lib/common.sh
+source "${SCRIPT_DIR}/../../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
@@ -101,6 +101,11 @@ install_languages() {
         "ruby:Ruby & bundler" \
         "perl:Perl" \
         "java:OpenJDK")
+
+    if (( PROMPT_CHOICES_EXIT_REQUESTED )) || [[ "${#langs[@]}" -eq 0 ]]; then
+        log_info "Skipping languages module."
+        return
+    fi
 
     if [[ " ${langs[*]} " == *" all "* ]]; then
         langs=("${available_keys[@]}")

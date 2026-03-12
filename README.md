@@ -1,58 +1,98 @@
-# Arch Linux CTF Bootstrap Scripts \(ﾉ◕ヮ◕\)ﾉ*:･ﾟ✧
+# Arch Linux CTF Bootstrap Scripts
 
-These scripts automate bootstrapping an Arch Linux system for CTF competitions and pentesting. They remain modular, idempotent, and give you control over what gets installed.
+These scripts bootstrap an Arch Linux system for CTF/pentesting with modular, repeatable installers.
+
+The desktop flow is now focused on **Wayland + dwl** via `modules/desktop/install_wayland_dwl.sh`.
 
 ## Structure
 
-- `bootstrap.sh` — main orchestrator; wires interactive menus to modular installers, handles logging and summaries.
-- `lib/common.sh` — shared helper library for logging, package operations, menu abstraction, and summary reporting.
-- `modules/` — category-specific installers:
-  - `install_arch_essentials.sh`
-  - `install_programming_languages.sh`
-  - `install_shell_tools.sh`
-  - `install_wayland_sway.sh`
-  - `install_ctf_suite.sh` (dispatches to submodules)
-  - `install_optional_extras.sh`
-  - `install_dotfiles.sh`
-  - `install_zsh_plugins.sh`
-  - `install_ctf_reversing.sh`
-  - `install_ctf_web.sh`
-  - `install_ctf_osint.sh`
-  - `install_ctf_pwn.sh`
-  - `install_ctf_crypto_forensics.sh`
+- `bootstrap.sh` - main orchestrator with interactive category menus.
+- `lib/common.sh` - shared helpers for logging, prompts, package operations, and summaries.
+- `modules/core/` - base system, shell, language, extras, and dotfiles modules.
+- `modules/desktop/install_wayland_dwl.sh` - dwl/Wayland desktop module with TTY autostart and VirtualBox helpers.
+- `modules/ctf/` - CTF suite and category-specific installers.
+- `docs/virtualization/virtualbox-dwl.md` - older virtualization notes.
 
-Logs are stored under `logs/` with timestamped files for the main run and the summary.
+Logs are written to `logs/bootstrap_<timestamp>.log` and `logs/summary_<timestamp>.txt`.
 
 ## Requirements
 
 - Arch Linux with `pacman` and `sudo` configured.
-- Ability to build AUR packages if you opt into AUR tools (Git, base-devel).
-- Optional: `whiptail`, `dialog`, or `fzf` for richer menus (fallback prompts are provided).
+- If using `archinstall`, use a **minimal desktop** baseline so Wayland/dwl packages are installed by this repo.
+- Keep Archinstall additional packages minimal: `git` and `base-devel` (for cloning/build workflows).
+- Optional menu UX tools: `whiptail`, `dialog`, or `fzf`.
+
+### Recommended archinstall baseline
+
+- `Profile -> Type -> Desktop`
+- Desktop profile: `Minimal`
+- Audio: `pipewire`
+- Network: `NetworkManager`
+- Graphics: `Mesa / open-source`
+- Additional packages: `git base-devel`
+
+All Wayland/dwl desktop packages are installed by `modules/desktop/install_wayland_dwl.sh`, including:
+
+- `dwl`
+- `foot`
+- `wayland`, `wayland-protocols`, `wlroots`
+- `seatd`
+- `mesa`, `vulkan-swrast`
+- `xorg-xwayland`
+- `wofi`, `wl-clipboard`, `swaybg`, `xdg-user-dirs`
 
 ## Usage
 
-1. Clone or copy this directory onto the target machine.
-2. Make sure scripts are executable:
+1. Make scripts executable:
    ```bash
-   chmod +x bootstrap.sh modules/*.sh lib/common.sh
+   chmod +x bootstrap.sh modules/core/*.sh modules/desktop/*.sh modules/ctf/*.sh lib/common.sh
    ```
-3. Run the orchestrator:
+2. Run:
    ```bash
    ./bootstrap.sh
    ```
-4. On first launch you’ll be asked which package manager to standardize on (`yay`, `paru`, or `pacman`). The chosen tool is installed if needed, the system is updated automatically, and all later installs go through that manager.
-5. Follow the numeric prompts to pick the categories and tools you want (type selections like `1 3 5` or ranges such as `1-3`; press Enter to accept defaults, and use `0` or `q` to quit a menu).
-6. Inspect `logs/bootstrap_<timestamp>.log` and `logs/summary_<timestamp>.txt` after completion for details.
+3. Choose category `wayland` and select components (`core`, `media`, `tools`, etc).
 
-Re-running the scripts is safe: all package installs use `--needed`, and pipx installs are idempotent.
+`core` also ensures `~/.bashrc` has a TTY autostart block:
 
-## Customization Tips
+```bash
+if [ -z "$WAYLAND_DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
+    exec WLR_NO_HARDWARE_CURSORS=1 dbus-run-session dwl
+fi
+```
 
-- Update defaults in each module if you prefer different selections to be pre-checked.
-- Extend the `modules/` scripts or add new ones; each entry simply sources `lib/common.sh` and records results.
-- Drop replacement configs into `dotfiles/` to have them copied into place (existing files are backed up automatically).
-- LazyVim setup relies on `fnm` to supply Node.js; adjust the helper in `install_shell_tools.sh` if you prefer a different runtime manager.
-- For offline or repetitive setups, consider caching `/var/cache/pacman/pkg` and `~/.cache/yay` (or your AUR helper of choice).
-- If you plan to import dotfiles or configure shells further, chain them from `bootstrap.sh` or add new modules.
+Re-running is safe; installs use `--needed` and modules are designed to be repeatable.
 
-Happy hacking ヽ\(^o^\)丿
+## VirtualBox Notes (dwl)
+
+For VirtualBox VMs, recommended host settings:
+
+- Graphics controller: `VMSVGA`
+- Video memory: `128 MB`
+- 3D acceleration: enabled
+
+When the `core` component runs inside a VirtualBox VM, it writes:
+
+- `~/.config/environment.d/90-dwl-virtualbox.conf` with:
+  - `WLR_NO_HARDWARE_CURSORS=1`
+  - `LIBGL_ALWAYS_SOFTWARE=1`
+
+These defaults improve wlroots compositor stability in VirtualBox.
+
+## dwl Mod Key (ALT)
+
+To use `ALT` as dwl `MODKEY`, build dwl from source and set this in `config.h`:
+
+```c
+#define MODKEY WLR_MODIFIER_ALT
+```
+
+Example commands:
+
+```bash
+git clone https://codeberg.org/dwl/dwl
+cd dwl
+# edit config.h or config.def.h to set MODKEY to WLR_MODIFIER_ALT
+make
+sudo make install
+```

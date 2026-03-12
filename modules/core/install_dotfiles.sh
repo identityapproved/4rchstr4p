@@ -4,10 +4,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="${SCRIPT_DIR}/.."
+ROOT_DIR="${SCRIPT_DIR}/../.."
 DOTFILES_DIR="${ROOT_DIR}/dotfiles"
-# shellcheck source=../lib/common.sh
-source "${SCRIPT_DIR}/../lib/common.sh"
+# shellcheck source=../../lib/common.sh
+source "${SCRIPT_DIR}/../../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
@@ -66,20 +66,12 @@ install_dotfiles() {
         deploy_file "${DOTFILES_DIR}/alacritty/alacritty.toml" "${HOME}/.config/alacritty/alacritty.toml"
     fi
 
-    if [[ -f "${DOTFILES_DIR}/wayland/sway/config" ]]; then
-        deploy_file "${DOTFILES_DIR}/wayland/sway/config" "${HOME}/.config/sway/config"
-    fi
-
     if [[ -d "${DOTFILES_DIR}/rose-pine/waybar" ]]; then
         deploy_dir "${DOTFILES_DIR}/rose-pine/waybar" "${HOME}/.config/waybar"
     fi
 
     if [[ -d "${DOTFILES_DIR}/rose-pine/wofi" ]]; then
         deploy_dir "${DOTFILES_DIR}/rose-pine/wofi" "${HOME}/.config/wofi"
-    fi
-
-    if [[ -d "${DOTFILES_DIR}/rose-pine/swaync" ]]; then
-        deploy_dir "${DOTFILES_DIR}/rose-pine/swaync" "${HOME}/.config/swaync"
     fi
 
     if [[ -d "${DOTFILES_DIR}/rose-pine/foot" ]]; then
@@ -100,10 +92,6 @@ install_dotfiles() {
 
     if [[ -f "${DOTFILES_DIR}/rose-pine/wallpaper-cycle.sh" ]]; then
         deploy_file "${DOTFILES_DIR}/rose-pine/wallpaper-cycle.sh" "${HOME}/.local/bin/wallpaper-cycle" "755"
-    fi
-
-    if [[ -f "${DOTFILES_DIR}/wayland/bin/dbus-sway-environment" ]]; then
-        deploy_file "${DOTFILES_DIR}/wayland/bin/dbus-sway-environment" "${HOME}/.local/bin/dbus-sway-environment" "755"
     fi
 
     if [[ -f "${DOTFILES_DIR}/wayland/bin/configure-gtk" ]]; then

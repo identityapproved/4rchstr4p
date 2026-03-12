@@ -4,9 +4,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="${SCRIPT_DIR}/.."
-# shellcheck source=../lib/common.sh
-source "${SCRIPT_DIR}/../lib/common.sh"
+ROOT_DIR="${SCRIPT_DIR}/../.."
+# shellcheck source=../../lib/common.sh
+source "${SCRIPT_DIR}/../../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
@@ -27,8 +27,20 @@ install_tmux() {
 }
 
 install_misc_cli() {
-    install_packages bat exa tree ripgrep fd dust procs jq zoxide
-    record_summary "CLI" "bat, exa, tree, ripgrep, fd, dust, procs, jq, zoxide"
+    local -a pkgs=(bat tree ripgrep fd dust procs jq zoxide)
+    if package_available eza; then
+        pkgs+=(eza)
+    elif package_available exa; then
+        pkgs+=(exa)
+    else
+        log_warn "Neither eza nor exa is available with ${PACKAGE_MANAGER}; skipping exa-style ls replacement."
+    fi
+
+    if install_packages "${pkgs[@]}"; then
+        record_summary "CLI" "Installed misc CLI tools: ${pkgs[*]}"
+    else
+        log_warn "Failed installing misc CLI tools."
+    fi
 }
 
 install_fonts() {
@@ -159,6 +171,11 @@ run_shell_tools() {
         "fonts:Nerd fonts selection" \
         "dotfiles:Deploy repository dotfiles" \
         "zsh_plugins:Install Oh My Zsh custom plugins")
+
+    if (( PROMPT_CHOICES_EXIT_REQUESTED )) || [[ "${#selections[@]}" -eq 0 ]]; then
+        log_info "Skipping shell tooling module."
+        return
+    fi
 
     if [[ " ${selections[*]} " == *" all "* ]]; then
         selections=("${available_keys[@]}")

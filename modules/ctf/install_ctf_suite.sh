@@ -5,9 +5,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODULE_ROOT="${SCRIPT_DIR}"
-ROOT_DIR="${SCRIPT_DIR}/.."
-# shellcheck source=../lib/common.sh
-source "${SCRIPT_DIR}/../lib/common.sh"
+ROOT_DIR="${SCRIPT_DIR}/../.."
+# shellcheck source=../../lib/common.sh
+source "${SCRIPT_DIR}/../../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
@@ -32,6 +32,11 @@ run_ctf_suite() {
         "all" \
         "all:Install every CTF module" \
         "${CTF_MODULES[@]}")
+
+    if (( PROMPT_CHOICES_EXIT_REQUESTED )) || [[ "${#picks[@]}" -eq 0 ]]; then
+        log_info "Skipping CTF suite module."
+        return
+    fi
 
     if [[ " ${picks[*]} " == *" all "* ]]; then
         picks=("${module_keys[@]}")

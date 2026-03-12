@@ -85,7 +85,7 @@ main() {
         "arch:Arch Linux essentials (helpers, system tuning, virtualization)"
         "languages:Programming languages and runtimes"
         "shell:Shell & terminal tooling"
-        "wayland:Wayland + Sway desktop environment"
+        "wayland:Wayland + dwl desktop environment"
         "ctf:CTF tooling suite (choose sub-categories inside)"
         "extras:Optional extras & polish"
     )
@@ -113,22 +113,22 @@ main() {
         for choice in "${top_choices[@]}"; do
             case "${choice}" in
                 arch)
-                    run_module "${MODULE_DIR}/install_arch_essentials.sh"
+                    run_module "${MODULE_DIR}/core/install_arch_essentials.sh"
                     ;;
                 languages)
-                    run_module "${MODULE_DIR}/install_programming_languages.sh"
+                    run_module "${MODULE_DIR}/core/install_programming_languages.sh"
                     ;;
                 shell)
-                    run_module "${MODULE_DIR}/install_shell_tools.sh"
+                    run_module "${MODULE_DIR}/core/install_shell_tools.sh"
                     ;;
                 wayland)
-                    run_module "${MODULE_DIR}/install_wayland_sway.sh"
+                    run_module "${MODULE_DIR}/desktop/install_wayland_dwl.sh"
                     ;;
                 ctf)
-                    run_module "${MODULE_DIR}/install_ctf_suite.sh"
+                    run_module "${MODULE_DIR}/ctf/install_ctf_suite.sh"
                     ;;
                 extras)
-                    run_module "${MODULE_DIR}/install_optional_extras.sh"
+                    run_module "${MODULE_DIR}/core/install_optional_extras.sh"
                     ;;
                 *)
                     log_warn "Unknown selection '${choice}', skipping."

@@ -4,9 +4,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="${SCRIPT_DIR}/.."
-# shellcheck source=../lib/common.sh
-source "${SCRIPT_DIR}/../lib/common.sh"
+ROOT_DIR="${SCRIPT_DIR}/../.."
+# shellcheck source=../../lib/common.sh
+source "${SCRIPT_DIR}/../../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
@@ -23,6 +23,11 @@ install_arch_packages() {
         "utils:System utilities (htop, lsof, p7zip, unzip, zip)" \
         "containers:Podman stack" \
         "fonts:Base fonts (ttf-dejavu, liberation)" )
+
+    if (( PROMPT_CHOICES_EXIT_REQUESTED )) || [[ "${#essentials[@]}" -eq 0 ]]; then
+        log_info "Skipping Arch essentials module."
+        return
+    fi
 
     if [[ " ${essentials[*]} " == *" all "* ]]; then
         essentials=("${available_keys[@]}")
