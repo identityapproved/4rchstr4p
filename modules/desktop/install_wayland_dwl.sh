@@ -10,6 +10,10 @@ source "${SCRIPT_DIR}/../../lib/common.sh"
 ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
+DWL_REPO_URL="${DWL_REPO_URL:-https://codeberg.org/dwl/dwl.git}"
+DWL_SOURCE_DIR="${DWL_SOURCE_DIR:-${HOME}/.local/src/dwl}"
+DWL_CONFIG_DIR="${DWL_CONFIG_DIR:-${HOME}/.config/dwl}"
+
 pick_first_available_package() {
     local pkg
     for pkg in "$@"; do
@@ -46,8 +50,9 @@ install_available_packages() {
 install_core() {
     local wlroots_pkg=""
     local -a core_pkgs=(
-        dwl foot wayland wayland-protocols
+        foot wayland wayland-protocols
         libinput libxkbcommon pkgconf libxcb xcb-util-wm
+        base-devel git
         seatd mesa vulkan-swrast xorg-xwayland
         wofi wl-clipboard swaybg xdg-user-dirs
         xdg-utils xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk
@@ -73,7 +78,7 @@ install_core() {
         log_warn "You may need to log out and log in again for seat group changes to apply."
     fi
 
-    mkdir -p "${HOME}/.local/bin"
+    mkdir -p "${HOME}/.local/bin" "${DWL_CONFIG_DIR}/patches"
     cat > "${HOME}/.local/bin/start-dwl" <<'LAUNCH'
 #!/usr/bin/env bash
 exec dbus-run-session dwl
@@ -102,6 +107,15 @@ BASHRC_BLOCK
         record_summary "dwl" "Appended dwl autostart block to ~/.bashrc"
     else
         log_info "dwl autostart block already present in ~/.bashrc."
+    fi
+
+    if [[ ! -f "${DWL_CONFIG_DIR}/README.md" ]]; then
+        cat > "${DWL_CONFIG_DIR}/README.md" <<'CONF_README'
+# dwl local configuration
+
+- `config.h` is used for local dwl source builds.
+- Drop extra patch files into `patches/*.patch` to apply custom dwl patches before each build.
+CONF_README
     fi
 }
 
@@ -151,9 +165,102 @@ CONF
     record_summary "VirtualBox" "Wrote compatibility env: ~/.config/environment.d/90-dwl-virtualbox.conf"
 }
 
+prepare_dwl_source() {
+    if [[ -d "${DWL_SOURCE_DIR}/.git" ]]; then
+        log_info "Using existing dwl source at ${DWL_SOURCE_DIR}."
+        return 0
+    fi
+
+    mkdir -p "$(dirname "${DWL_SOURCE_DIR}")"
+    if ! git clone "${DWL_REPO_URL}" "${DWL_SOURCE_DIR}"; then
+        log_error "Failed to clone dwl source from ${DWL_REPO_URL}."
+        return 1
+    fi
+
+    record_summary "dwl" "Cloned source to ${DWL_SOURCE_DIR}"
+}
+
+seed_vm_config_h() {
+    local target_config="${DWL_CONFIG_DIR}/config.h"
+    local source_default="${DWL_SOURCE_DIR}/config.def.h"
+
+    if [[ -f "${target_config}" ]]; then
+        log_info "Using existing dwl config at ${target_config}."
+        return 0
+    fi
+
+    if [[ ! -f "${source_default}" ]]; then
+        log_error "Missing ${source_default}; cannot create config.h."
+        return 1
+    fi
+
+    cp "${source_default}" "${target_config}"
+
+    # VM-friendly defaults: avoid host Super key capture and use Wayland-native terminal.
+    sed -i 's/#define MODKEY[[:space:]].*/#define MODKEY WLR_MODIFIER_ALT/' "${target_config}" || true
+    sed -i 's/static const char \\*termcmd\\[\\][[:space:]]*=.*/static const char *termcmd[] = { "foot", NULL };/' "${target_config}" || true
+
+    record_summary "dwl" "Created VM-tuned ${target_config}"
+}
+
+apply_local_dwl_patches() {
+    local patch
+    local patch_dir="${DWL_CONFIG_DIR}/patches"
+    shopt -s nullglob
+    for patch in "${patch_dir}"/*.patch; do
+        if patch -d "${DWL_SOURCE_DIR}" -p1 --forward --dry-run < "${patch}" >/dev/null 2>&1; then
+            if patch -d "${DWL_SOURCE_DIR}" -p1 --forward < "${patch}" >/dev/null 2>&1; then
+                log_info "Applied dwl patch: $(basename "${patch}")"
+                record_summary "dwl patch" "$(basename "${patch}")"
+            else
+                log_warn "Failed to apply dwl patch: ${patch}"
+            fi
+        elif patch -d "${DWL_SOURCE_DIR}" -p1 --reverse --dry-run < "${patch}" >/dev/null 2>&1; then
+            log_info "Patch already applied: $(basename "${patch}")"
+        else
+            log_warn "Patch does not apply cleanly: ${patch}"
+        fi
+    done
+    shopt -u nullglob
+}
+
+build_install_dwl() {
+    local target_config="${DWL_CONFIG_DIR}/config.h"
+    if [[ ! -f "${target_config}" ]]; then
+        log_error "Missing ${target_config}; cannot build dwl."
+        return 1
+    fi
+
+    cp "${target_config}" "${DWL_SOURCE_DIR}/config.h"
+    apply_local_dwl_patches
+
+    if (cd "${DWL_SOURCE_DIR}" && make clean && make); then
+        ensure_sudo
+        if (cd "${DWL_SOURCE_DIR}" && sudo make install); then
+            record_summary "dwl" "Built + installed from source"
+            return 0
+        fi
+    fi
+
+    log_error "dwl build/install failed."
+    return 1
+}
+
+install_dwl_from_source() {
+    if ! prepare_dwl_source; then
+        return 1
+    fi
+
+    if ! seed_vm_config_h; then
+        return 1
+    fi
+
+    build_install_dwl
+}
+
 print_dwl_build_hint() {
-    log_info "For ALT as dwl MODKEY, rebuild dwl from source with '#define MODKEY WLR_MODIFIER_ALT' in config.h."
-    record_summary "dwl" "Set ALT MODKEY via source build (config.h)"
+    log_info "dwl config: ${DWL_CONFIG_DIR}/config.h (patches: ${DWL_CONFIG_DIR}/patches/*.patch)."
+    record_summary "dwl" "Config dir ${DWL_CONFIG_DIR}"
 }
 
 run_wayland_dwl() {
@@ -183,6 +290,7 @@ run_wayland_dwl() {
             core)
                 install_core
                 configure_virtualbox_compat
+                install_dwl_from_source || log_warn "dwl source install did not complete; check logs."
                 ;;
             media) install_media ;;
             tools) install_tools ;;

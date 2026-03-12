@@ -9,12 +9,13 @@ The desktop flow is now focused on **Wayland + dwl** via `modules/desktop/instal
 
 - `bootstrap.sh` - main orchestrator with interactive category menus.
 - `lib/common.sh` - shared helpers for logging, prompts, package operations, and summaries.
-- `modules/core/` - base system, shell, language, extras, and dotfiles modules.
-- `modules/desktop/install_wayland_dwl.sh` - dwl/Wayland desktop module with TTY autostart and VirtualBox helpers.
+- `modules/core/` - base system, shell, language, and dotfiles modules.
+- `modules/desktop/install_wayland_dwl.sh` - dwl/Wayland desktop module with source build, TTY autostart, and VirtualBox helpers.
 - `modules/ctf/` - focused security modules:
   - `install_ctf_web.sh`
   - `install_ctf_hashcracking.sh`
   - `install_ctf_suite.sh` (dispatcher)
+- `dotfiles/wayland/dwl/` - dwl scaffold and patch workflow notes.
 - `docs/virtualization/virtualbox-dwl.md` - older virtualization notes.
 
 Logs are written to `logs/bootstrap_<timestamp>.log` and `logs/summary_<timestamp>.txt`.
@@ -35,9 +36,8 @@ Logs are written to `logs/bootstrap_<timestamp>.log` and `logs/summary_<timestam
 - Graphics: `Mesa / open-source`
 - Additional packages: `git base-devel`
 
-All Wayland/dwl desktop packages are installed by `modules/desktop/install_wayland_dwl.sh`, including:
+All Wayland/dwl desktop dependencies are installed by `modules/desktop/install_wayland_dwl.sh`, including:
 
-- `dwl`
 - `foot`
 - `wayland`, `wayland-protocols`, `wlroots`
 - `libinput`, `libxkbcommon`, `pkgconf`
@@ -63,7 +63,9 @@ All Wayland/dwl desktop packages are installed by `modules/desktop/install_wayla
 
 ```bash
 if [ -z "$WAYLAND_DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
-    exec WLR_NO_HARDWARE_CURSORS=1 dbus-run-session dwl
+    if command -v dwl >/dev/null 2>&1 && command -v dbus-run-session >/dev/null 2>&1; then
+        WLR_NO_HARDWARE_CURSORS=1 dbus-run-session dwl || echo "dwl exited; staying in shell for troubleshooting."
+    fi
 fi
 ```
 
@@ -76,6 +78,7 @@ For VirtualBox VMs, recommended host settings:
 - Graphics controller: `VMSVGA`
 - Video memory: `128 MB`
 - 3D acceleration: enabled
+- **Do not forget to enable 3D acceleration in VirtualBox.**
 
 When the `core` component runs inside a VirtualBox VM, it writes:
 
@@ -85,20 +88,15 @@ When the `core` component runs inside a VirtualBox VM, it writes:
 
 These defaults improve wlroots compositor stability in VirtualBox.
 
-## dwl Mod Key (ALT)
+## dwl Build + Config
 
-To use `ALT` as dwl `MODKEY`, build dwl from source and set this in `config.h`:
+`dwl` is built from source during the `wayland -> core` step.
 
-```c
-#define MODKEY WLR_MODIFIER_ALT
-```
+- Source dir: `~/.local/src/dwl`
+- Local config dir: `~/.config/dwl`
+- Main config: `~/.config/dwl/config.h`
+- Patch queue: `~/.config/dwl/patches/*.patch`
 
-Example commands:
+The installer auto-creates `~/.config/dwl/config.h` from upstream `config.def.h`, then applies VM-friendly defaults (`ALT` mod key and `foot` terminal), applies any local patches, and builds/installs dwl.
 
-```bash
-git clone https://codeberg.org/dwl/dwl
-cd dwl
-# edit config.h or config.def.h to set MODKEY to WLR_MODIFIER_ALT
-make
-sudo make install
-```
+This makes the setup expandable: add new patch files under `~/.config/dwl/patches/` and re-run the `wayland` core step.

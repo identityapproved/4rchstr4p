@@ -79,15 +79,14 @@ main() {
 
     log_section "Arch Linux web pentest bootstrap started"
 
-    local -a category_keys=("arch" "languages" "shell" "wayland" "ctf" "extras")
+    local -a category_keys=("arch" "languages" "shell" "wayland" "ctf")
     local -a category_options=(
-        "all:Run every category (arch, languages, shell, wayland, ctf, extras)"
+        "all:Run every category (arch, languages, shell, wayland, ctf)"
         "arch:Arch Linux essentials (helpers, system tuning, virtualization)"
         "languages:Programming languages and runtimes"
         "shell:Shell & terminal tooling"
         "wayland:Wayland + dwl desktop environment"
         "ctf:Web pentest + hashcracking tools"
-        "extras:Optional extras & polish"
     )
 
     while true; do
@@ -126,9 +125,6 @@ main() {
                     ;;
                 ctf)
                     run_module "${MODULE_DIR}/ctf/install_ctf_suite.sh"
-                    ;;
-                extras)
-                    run_module "${MODULE_DIR}/core/install_optional_extras.sh"
                     ;;
                 *)
                     log_warn "Unknown selection '${choice}', skipping."
