@@ -14,7 +14,6 @@ ensure_package_manager
 CTF_MODULES=(
     "install_ctf_reversing.sh:Reversing tools (Ghidra, Cutter, radare2...)"
     "install_ctf_web.sh:Web exploitation (Burp, ZAP, dirsearch...)"
-    "install_ctf_osint.sh:OSINT (Maltego, Spiderfoot, Sherlock)"
     "install_ctf_pwn.sh:Pwn (Pwntools, ROP, GDB helpers, QEMU)"
     "install_ctf_crypto_forensics.sh:Crypto & Forensics (CyberChef, binwalk, volatility)"
 )
@@ -23,7 +22,6 @@ run_ctf_suite() {
     local -a module_keys=(
         install_ctf_reversing.sh
         install_ctf_web.sh
-        install_ctf_osint.sh
         install_ctf_pwn.sh
         install_ctf_crypto_forensics.sh
     )

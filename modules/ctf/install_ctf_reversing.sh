@@ -10,7 +10,7 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 install_reversing() {
-    local -a available_keys=(ghidra radare cutter binaryninja frida)
+    local -a available_keys=(ghidra radare cutter binaryninja)
     mapfile -t selections < <(prompt_choices \
         "Choose reversing tools:" \
         "all" \
@@ -18,8 +18,7 @@ install_reversing() {
         "ghidra:Ghidra (AUR download)" \
         "radare:radare2 suite" \
         "cutter:Cutter GUI" \
-        "binaryninja:Binary Ninja (manual install)" \
-        "frida:Frida tools")
+        "binaryninja:Binary Ninja (manual install)")
 
     if [[ " ${selections[*]} " == *" all "* ]]; then
         selections=("${available_keys[@]}")
@@ -51,13 +50,6 @@ install_reversing() {
             binaryninja)
                 log_warn "Binary Ninja not available via repos; install manually."
                 record_summary "Reversing" "Binary Ninja (manual)"
-                ;;
-            frida)
-                if install_packages python-frida frida-tools; then
-                    record_summary "Reversing" "Frida"
-                else
-                    log_warn "Failed to install Frida tools."
-                fi
                 ;;
         esac
     done

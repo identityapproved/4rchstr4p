@@ -10,7 +10,7 @@ ensure_environment "${ROOT_DIR}"
 ensure_package_manager
 
 install_web_tools() {
-    local -a available_keys=(burp zap dirsearch gobuster wfuzz sqlmap ffuf)
+    local -a available_keys=(burp zap dirsearch gobuster wfuzz sqlmap ffuf caido-desktop caido-cli)
     mapfile -t selections < <(prompt_choices \
         "Choose web exploitation tools:" \
         "all" \
@@ -21,7 +21,9 @@ install_web_tools() {
         "gobuster:gobuster" \
         "wfuzz:wfuzz" \
         "sqlmap:sqlmap" \
-        "ffuf:ffuf (AUR)")
+        "ffuf:ffuf (AUR)" \
+        "caido-desktop:Caido Desktop (AUR)" \
+        "caido-cli:Caido CLI (AUR)")
 
     if [[ " ${selections[*]} " == *" all "* ]]; then
         selections=("${available_keys[@]}")
@@ -76,6 +78,20 @@ install_web_tools() {
                     record_summary "Web" "ffuf"
                 else
                     log_warn "Failed to install ffuf."
+                fi
+                ;;
+            caido-desktop)
+                if install_packages caido-desktop; then
+                    record_summary "Web" "Caido Desktop"
+                else
+                    log_warn "Failed to install caido-desktop."
+                fi
+                ;;
+            caido-cli)
+                if install_packages caido-cli; then
+                    record_summary "Web" "Caido CLI"
+                else
+                    log_warn "Failed to install caido-cli."
                 fi
                 ;;
         esac
