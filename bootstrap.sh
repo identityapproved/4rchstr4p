@@ -85,7 +85,7 @@ main() {
         "arch:Arch Linux essentials (helpers, system tuning, virtualization)"
         "languages:Programming languages and runtimes"
         "shell:Shell & terminal tooling"
-        "wayland:Wayland + dwl desktop environment"
+        "wayland:Wayland + sway desktop environment"
         "ctf:Web pentest + hashcracking tools"
     )
 
@@ -121,7 +121,7 @@ main() {
                     run_module "${MODULE_DIR}/core/install_shell_tools.sh"
                     ;;
                 wayland)
-                    run_module "${MODULE_DIR}/desktop/install_wayland_dwl.sh"
+                    run_module "${MODULE_DIR}/desktop/install_wayland_sway.sh"
                     ;;
                 ctf)
                     run_module "${MODULE_DIR}/ctf/install_ctf_suite.sh"

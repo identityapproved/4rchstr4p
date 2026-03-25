@@ -22,6 +22,10 @@ ENV/
 
 # Go build artifacts
 bin/
+!dotfiles/wayland/bin/
+dotfiles/wayland/bin/*
+!dotfiles/wayland/bin/dbus-sway-environment
+!dotfiles/wayland/bin/wayland-clipboard-bridge
 
 # Rust cargo target directory
 target/

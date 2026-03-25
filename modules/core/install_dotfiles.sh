@@ -98,6 +98,18 @@ install_dotfiles() {
         deploy_file "${DOTFILES_DIR}/wayland/bin/configure-gtk" "${HOME}/.local/bin/configure-gtk" "755"
     fi
 
+    if [[ -f "${DOTFILES_DIR}/wayland/bin/dbus-sway-environment" ]]; then
+        deploy_file "${DOTFILES_DIR}/wayland/bin/dbus-sway-environment" "${HOME}/.local/bin/dbus-sway-environment" "755"
+    fi
+
+    if [[ -f "${DOTFILES_DIR}/wayland/bin/wayland-clipboard-bridge" ]]; then
+        deploy_file "${DOTFILES_DIR}/wayland/bin/wayland-clipboard-bridge" "${HOME}/.local/bin/wayland-clipboard-bridge" "755"
+    fi
+
+    if [[ -d "${DOTFILES_DIR}/wayland/sway" ]]; then
+        deploy_dir "${DOTFILES_DIR}/wayland/sway" "${HOME}/.config/sway"
+    fi
+
     if [[ -d "${DOTFILES_DIR}/rose-pine/wallpapers" ]]; then
         deploy_dir "${DOTFILES_DIR}/rose-pine/wallpapers" "${HOME}/.local/share/wallpapers/rose-pine"
     fi

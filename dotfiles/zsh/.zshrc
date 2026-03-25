@@ -65,6 +65,30 @@ for f in /usr/share/fzf/key-bindings.zsh /usr/share/fzf/completion.zsh "$HOME/.f
   [[ -e $f ]] && source $f
 done
 
+subshell-wrap() {
+  if [[ -z $BUFFER ]]; then
+    BUFFER="()"
+    CURSOR=1
+  else
+    BUFFER="(${BUFFER})"
+    CURSOR=${#BUFFER}
+  fi
+  zle redisplay
+}
+zle -N subshell-wrap
+
+insert-subshell() {
+  LBUFFER+="("
+  RBUFFER=")${RBUFFER}"
+  zle redisplay
+}
+zle -N insert-subshell
+
+bindkey -M viins '^G' subshell-wrap
+bindkey -M vicmd 'gs' subshell-wrap
+bindkey -M viins '^X(' insert-subshell
+bindkey -M vicmd 'g(' insert-subshell
+
 export MANPAGER="sh -c 'col -bx | bat -l man -p'"
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init --cmd cd zsh)"

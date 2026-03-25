@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dbus-update-activation-environment --systemd \
+    DISPLAY \
+    WAYLAND_DISPLAY \
+    SWAYSOCK \
+    XDG_CURRENT_DESKTOP \
+    XDG_SESSION_DESKTOP \
+    XDG_SESSION_TYPE >/dev/null 2>&1 || true
+
+systemctl --user import-environment \
+    DISPLAY \
+    WAYLAND_DISPLAY \
+    SWAYSOCK \
+    XDG_CURRENT_DESKTOP \
+    XDG_SESSION_DESKTOP \
+    XDG_SESSION_TYPE >/dev/null 2>&1 || true
