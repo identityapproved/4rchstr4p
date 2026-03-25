@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v systemd-detect-virt >/dev/null 2>&1; then
+    exit 0
+fi
+
+virt="$(systemd-detect-virt 2>/dev/null || true)"
+if [[ "${virt}" != "oracle" && "${virt}" != "virtualbox" ]]; then
+    exit 0
+fi
+
+if ! command -v swaymsg >/dev/null 2>&1 || ! command -v jq >/dev/null 2>&1; then
+    exit 0
+fi
+
+while true; do
+    swaymsg -t get_outputs -r 2>/dev/null | jq -r '
+        .[]
+        | select(.active == true)
+        | . as $output
+        | ([$output.modes[]? | select(.preferred == true) | [(.width | tostring), (.height | tostring)]] | first) as $preferred
+        | select($preferred != null)
+        | [$output.name, ($output.current_mode.width | tostring), ($output.current_mode.height | tostring), $preferred[0], $preferred[1]]
+        | @tsv
+    ' | while IFS=$'\t' read -r name current_width current_height preferred_width preferred_height; do
+        if [[ -z "${preferred_width:-}" || -z "${preferred_height:-}" ]]; then
+            continue
+        fi
+
+        if [[ "${current_width}" != "${preferred_width}" || "${current_height}" != "${preferred_height}" ]]; then
+            swaymsg output "${name}" resolution "${preferred_width}x${preferred_height}" >/dev/null 2>&1 || true
+        fi
+    done
+
+    sleep 2
+done

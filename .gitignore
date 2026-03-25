@@ -25,6 +25,7 @@ bin/
 !dotfiles/wayland/bin/
 dotfiles/wayland/bin/*
 !dotfiles/wayland/bin/dbus-sway-environment
+!dotfiles/wayland/bin/virtualbox-display-sync
 !dotfiles/wayland/bin/wayland-clipboard-bridge
 
 # Rust cargo target directory

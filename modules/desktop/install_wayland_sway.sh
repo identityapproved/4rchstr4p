@@ -67,7 +67,7 @@ install_core() {
         sway swaybg swayidle swaylock waybar foot wofi
         wayland wayland-protocols xorg-xwayland
         seatd mesa vulkan-swrast
-        wl-clipboard xclip xdg-user-dirs xdg-utils
+        wl-clipboard xclip jq xdg-user-dirs xdg-utils
         xdg-desktop-portal xdg-desktop-portal-wlr xdg-desktop-portal-gtk
     )
 

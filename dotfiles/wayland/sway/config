@@ -121,6 +121,7 @@ input "type:keyboard" {
 
 exec $HOME/.local/bin/dbus-sway-environment
 exec $HOME/.local/bin/wayland-clipboard-bridge
+exec $HOME/.local/bin/virtualbox-display-sync
 exec_always waybar
 
 include /etc/sway/config.d/*
