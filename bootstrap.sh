@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap.sh - Arch Linux CTF environment orchestrator.
+# bootstrap.sh - Arch Linux web pentest environment orchestrator.
 
 set -euo pipefail
 
@@ -77,17 +77,16 @@ main() {
     ensure_package_manager
     prompt_terminal_emulators
 
-    log_section "Arch Linux CTF bootstrap started"
+    log_section "Arch Linux web pentest bootstrap started"
 
-    local -a category_keys=("arch" "languages" "shell" "wayland" "ctf" "extras")
+    local -a category_keys=("arch" "languages" "shell" "wayland" "ctf")
     local -a category_options=(
-        "all:Run every category (arch, languages, shell, wayland, ctf, extras)"
+        "all:Run every category (arch, languages, shell, wayland, ctf)"
         "arch:Arch Linux essentials (helpers, system tuning, virtualization)"
         "languages:Programming languages and runtimes"
         "shell:Shell & terminal tooling"
-        "wayland:Wayland + Sway desktop environment"
-        "ctf:CTF tooling suite (choose sub-categories inside)"
-        "extras:Optional extras & polish"
+        "wayland:Wayland + sway desktop environment"
+        "ctf:Web pentest + hashcracking tools"
     )
 
     while true; do
@@ -113,22 +112,19 @@ main() {
         for choice in "${top_choices[@]}"; do
             case "${choice}" in
                 arch)
-                    run_module "${MODULE_DIR}/install_arch_essentials.sh"
+                    run_module "${MODULE_DIR}/core/install_arch_essentials.sh"
                     ;;
                 languages)
-                    run_module "${MODULE_DIR}/install_programming_languages.sh"
+                    run_module "${MODULE_DIR}/core/install_programming_languages.sh"
                     ;;
                 shell)
-                    run_module "${MODULE_DIR}/install_shell_tools.sh"
+                    run_module "${MODULE_DIR}/core/install_shell_tools.sh"
                     ;;
                 wayland)
-                    run_module "${MODULE_DIR}/install_wayland_sway.sh"
+                    run_module "${MODULE_DIR}/desktop/install_wayland_sway.sh"
                     ;;
                 ctf)
-                    run_module "${MODULE_DIR}/install_ctf_suite.sh"
-                    ;;
-                extras)
-                    run_module "${MODULE_DIR}/install_optional_extras.sh"
+                    run_module "${MODULE_DIR}/ctf/install_ctf_suite.sh"
                     ;;
                 *)
                     log_warn "Unknown selection '${choice}', skipping."

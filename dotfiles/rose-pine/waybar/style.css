@@ -21,3 +21,65 @@
 @define-color highlightLow    #21202e;
 @define-color highlightMed    #403d52;
 @define-color highlightHigh   #524f67;
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "DejaVu Sans Mono";
+    font-size: 13px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: @base;
+    color: @text;
+}
+
+tooltip {
+    background: @surface;
+    border: 1px solid @highlightMed;
+    color: @text;
+}
+
+#workspaces {
+    margin: 5px 0 5px 8px;
+}
+
+#workspaces button {
+    background: transparent;
+    color: @subtle;
+    padding: 0 8px;
+}
+
+#workspaces button.active {
+    background: @highlightMed;
+    color: @text;
+}
+
+#workspaces button:hover {
+    background: @highlightLow;
+    color: @text;
+    box-shadow: none;
+}
+
+#mode,
+#clock,
+#pulseaudio,
+#network,
+#battery,
+#tray {
+    background: @surface;
+    color: @text;
+    margin: 5px 8px 5px 0;
+    padding: 0 10px;
+}
+
+#mode {
+    color: @gold;
+}
+
+#pulseaudio.muted,
+#network.disconnected,
+#battery.warning {
+    color: @love;
+}

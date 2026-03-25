@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ -n "${WAYLAND_CLIPBOARD_BRIDGE_STARTED:-}" ]]; then
+    exit 0
+fi
+export WAYLAND_CLIPBOARD_BRIDGE_STARTED=1
+
+if ! command -v wl-copy >/dev/null 2>&1 || ! command -v wl-paste >/dev/null 2>&1; then
+    exit 0
+fi
+
+if command -v VBoxClient >/dev/null 2>&1; then
+    VBoxClient --clipboard >/dev/null 2>&1 &
+fi
+
+if ! command -v xclip >/dev/null 2>&1 || [[ -z "${DISPLAY:-}" ]]; then
+    exit 0
+fi
+
+hash_clipboard() {
+    printf '%s' "$1" | sha256sum | awk '{print $1}'
+}
+
+last_wl_hash=""
+last_x_hash=""
+last_from_wl=""
+last_from_x=""
+
+while true; do
+    wl_data="$(wl-paste --no-newline 2>/dev/null || true)"
+    x_data="$(xclip -selection clipboard -o 2>/dev/null || true)"
+
+    wl_hash="$(hash_clipboard "${wl_data}")"
+    x_hash="$(hash_clipboard "${x_data}")"
+
+    if [[ "${wl_hash}" != "${last_wl_hash}" && "${wl_hash}" != "${last_from_x}" ]]; then
+        printf '%s' "${wl_data}" | xclip -selection clipboard -in >/dev/null 2>&1 || true
+        last_from_wl="${wl_hash}"
+        x_hash="${wl_hash}"
+    fi
+
+    if [[ "${x_hash}" != "${last_x_hash}" && "${x_hash}" != "${last_from_wl}" ]]; then
+        printf '%s' "${x_data}" | wl-copy >/dev/null 2>&1 || true
+        last_from_x="${x_hash}"
+        wl_hash="${x_hash}"
+    fi
+
+    last_wl_hash="${wl_hash}"
+    last_x_hash="${x_hash}"
+    sleep 1
+done
