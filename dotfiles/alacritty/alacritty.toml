@@ -1,4 +1,7 @@
-[shell]
+[env]
+WINIT_UNIX_BACKEND = "x11"
+
+[terminal.shell]
 program = "/bin/zsh"
 args = [ "-l", "-c", "tmux" ]
 

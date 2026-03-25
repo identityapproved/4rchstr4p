@@ -89,6 +89,13 @@ install_core() {
     mkdir -p "${HOME}/.local/bin" "${HOME}/.config/sway"
     cat > "${HOME}/.local/bin/start-sway" <<'LAUNCH'
 #!/usr/bin/env bash
+if [[ -f "${HOME}/.config/environment.d/90-sway-virtualbox.conf" ]]; then
+    # Sway is launched directly from the shell, so import VM-specific env here.
+    set -a
+    # shellcheck disable=SC1090
+    source "${HOME}/.config/environment.d/90-sway-virtualbox.conf"
+    set +a
+fi
 exec dbus-run-session sway
 LAUNCH
     chmod +x "${HOME}/.local/bin/start-sway"
@@ -96,10 +103,10 @@ LAUNCH
 
     append_file_once "${HOME}/.bash_profile" "# Auto-start sway on first TTY." '# Auto-start sway on first TTY.
 if [ -z "${WAYLAND_DISPLAY:-}" ] && [ -z "${DISPLAY:-}" ] && [ "$(tty)" = "/dev/tty1" ]; then
-    if command -v sway >/dev/null 2>&1 && command -v dbus-run-session >/dev/null 2>&1; then
-        exec dbus-run-session sway
+    if command -v start-sway >/dev/null 2>&1; then
+        exec start-sway
     else
-        echo "sway or dbus-run-session is missing; skipping autostart."
+        echo "start-sway is missing; skipping autostart."
     fi
 fi'
 }
